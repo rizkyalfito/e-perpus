@@ -4,5 +4,5 @@
 // Dibuat oleh di PT. Pacifica Raya Technology \\
 //------------------------------::::::::::::::::::::------------------------------\\
 
-// Arahkan user ketika pertama kali membuka applikasi ke halaman login
+// Arahkan user ketika pertama kali membuka aplikasi ke halaman login
 header("location: masuk");
