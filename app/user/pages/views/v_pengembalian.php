@@ -32,51 +32,11 @@
             <div class="col-xs-12">
                 <div class="nav-tabs-custom">
                     <ul class="nav nav-tabs">
-                        <li class="active"><a href="#tgl-pinjam" data-toggle="tab">Formulir Pengembalian Buku</a></li>
-                        <li><a href="#tgl-pengembalian" data-toggle="tab">Riwayat Pengembalian Buku</a></li>
+                        <li class="active"><a href="#tgl-pengembalian" data-toggle="tab">Riwayat Pengembalian Buku</a></li>
                     </ul>
                     <div class="tab-content">
-                        <!-- Font Awesome Icons -->
-                        <div class="tab-pane active" id="tgl-pinjam">
-                            <section id="new">
-                                <form action="pages/function/Peminjaman.php?aksi=pengembalian" method="POST">
-                                    <div class="form-group">
-                                        <label>Judul Buku</label>
-                                        <select class="form-control" name="judulBuku" required>
-                                            <option selected disabled> -- Silahkan pilih buku yang akan di kembalikan -- </option>
-                                            <?php
-                                            include "../../config/koneksi.php";
-
-                                            $fullname = $_SESSION['fullname'];
-                                            $sql = mysqli_query($koneksi, "SELECT * FROM peminjaman WHERE nama_anggota = '$fullname' AND tanggal_pengembalian = ''");
-                                            while ($data = mysqli_fetch_array($sql)) {
-                                            ?>
-                                                <option value="<?= $data['judul_buku']; ?>"> <?= $data['judul_buku']; ?></option>
-                                            <?php
-                                            }
-                                            ?>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Tanggal Pengembalian</label>
-                                        <input type="text" class="form-control" name="tanggalPengembalian" value="<?= date('d-m-Y'); ?>" readonly required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Kondisi Buku Saat Dikembalikan</label>
-                                        <select class="form-control" name="kondisiBukuSaatDikembalikan" required>
-                                            <option selected disabled>-- Silahkan pilih kondisi buku saat dikembalikan --</option>
-                                            <!-- -->
-                                            <option value="Baik">Baik ( Tidak terkena denda )</option>
-                                            <option value="Rusak">Rusak ( Denda 20.000 )</option>
-                                            <option value="Hilang">Hilang ( Denda 50.000 )</option>
-                                        </select>
-                                    </div>
-                                    <div class=" form-group">
-                                        <button type="submit" class="btn btn-primary btn-block">Kirim</button>
-                                    </div>
-                                </form>
-                            </section>
-                        </div>
+                        <!-- Tanggal Pengembalian -->
+                        <div class="tab-pane active" id="tgl-pengembalian">
 
                         <!-- Tanggal Pengembalian -->
                         <div class="tab-pane" id="tgl-pengembalian">

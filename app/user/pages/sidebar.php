@@ -16,33 +16,9 @@
         <ul class="sidebar-menu" data-widget="tree">
             <li class="header">MAIN MENU</li>
             <li><a href="dashboard"><i class="fa fa-home"></i> <span>Dashboard</span></a></li>
-            <li><a href="peminjaman-buku"><i class="fa fa-exchange"></i> <span>Peminjaman Buku</span></a></li>
-            <li><a href="pengembalian-buku"><i class="fa fa-repeat"></i> <span>Pengembalian Buku</span></a></li>
-            <li class="header">LAIN LAIN</li>
-            <li><a href="pesan"><i class="fa fa-envelope"></i> <span>Pesan</span>
-                    <span class="pull-right-container" id="jumlahPesan">
-                        <?php
-                        include "../../config/koneksi.php";
-
-                        $nama_saya = $_SESSION['fullname'];
-                        $default = "Belum dibaca";
-                        $query_pesan  = mysqli_query($koneksi, "SELECT * FROM pesan WHERE penerima = '$nama_saya' AND status = '$default'");
-                        $jumlah_pesan = mysqli_num_rows($query_pesan);
-
-                        $nama_saya = $_SESSION['fullname'];
-                        $default = "Belum dibaca";
-                        $query_pesan  = mysqli_query($koneksi, "SELECT * FROM pesan WHERE penerima = '$nama_saya' AND status = '$default'");
-                        $row_pesan = mysqli_fetch_array($query_pesan);
-
-                        if ($jumlah_pesan == null) {
-                            // Hilangkan badge pesan
-                        } else {
-                            echo "<span class='label label-danger pull-right'>" . $jumlah_pesan . "</span>";
-                        }
-                        ?>
-                    </span>
-                </a></li>
-            <li><a href="profil-saya"><i class="fa fa-user"></i> <span>Profil Saya</span></a></li>
+            <li><a href="peminjaman"><i class="fa fa-file"></i> <span>Data Peminjaman</span></a></li>
+            <li><a href="pengembalian"><i class="fa fa-file"></i> <span>Data Pengembalian</span></a></li>
+            <li><a href="profil-saya"><i class="fa fa-user"></i> <span>Cetak Kartu Anggota</span></a></li>
             <li class="header">LANJUTAN</li>
             <li><a href="#Logout" data-toggle="modal" data-target="#modalLogoutConfirm"><i class="fa fa-sign-out"></i> <span>Keluar</span></a></li>
         </ul>

@@ -15,6 +15,8 @@ RewriteRule ^laporan$ home.php?module=pages/views/v_laporan [L]
 RewriteRule ^pesan$ home.php?module=pages/views/v_pesan [L]
 #
 RewriteRule ^data-peminjaman$ home.php?module=pages/views/v_peminjaman [L]
+RewriteRule ^tambah-peminjaman$ home.php?module=pages/views/v_peminjaman_add [L]
+RewriteRule ^tambah-pengembalian$ home.php?module=pages/views/v_pengembalian_add [L]
 
 RewriteRule ^keluar$ logout.php [L]
 </IfModule>
