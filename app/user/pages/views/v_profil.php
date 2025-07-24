@@ -16,7 +16,6 @@
                     var yy = date.getYear();
                     var year = (yy < 1000) ? yy + 1900 : yy;
                     document.write(thisDay + ', ' + day + ' ' + months[month] + ' ' + year);
-                    //
                 </script>
             </small>
         </h1>
@@ -128,9 +127,10 @@
                     </div>
                     <!-- /.box-header -->
                     <div class="box-body">
-                        <!-- Animasi -->
-                        <img src="../../assets/dist/img/avatar5.png" style="width: 125px; height: 125px; display: block; margin-left: auto; margin-right: auto; margin-top: -5px; margin-bottom: 15px;" loop autoplay></lottie-player>
-                        <!-- -->
+                        <!-- Avatar -->
+                        <img src="../../assets/dist/img/avatar5.png" style="width: 125px; height: 125px; display: block; margin-left: auto; margin-right: auto; margin-top: -5px; margin-bottom: 15px;" loop autoplay>
+                        
+                        <!-- Profile Information -->
                         <p style="font-weight: bold;">Kode Anggota : <?= $row['kode_user']; ?></p>
                         <p style="font-weight: bold;">NIS : <?= $row['nis']; ?></p>
                         <p style="font-weight: bold;">Nama Lengkap : <?= $row['fullname']; ?></p>
@@ -138,6 +138,25 @@
                         <p style="font-weight: bold;">Kata Sandi : <?= $row['password']; ?></p>
                         <p style="font-weight: bold;">Kelas : <?= $row['kelas']; ?></p>
                         <p style="font-weight: bold;">Alamat Lengkap : <?= $row['alamat']; ?></p>
+                        
+                        <!-- Barcode Section -->
+                        <div style="text-align: center; margin-top: 20px; padding: 15px; border: 2px dashed #ddd; background-color: #f9f9f9;">
+                            <h4 style="font-family: 'Quicksand', sans-serif; font-weight: bold; margin-bottom: 10px;">Barcode Anggota</h4>
+                            
+                            <!-- Barcode Image menggunakan service online -->
+                            <img id="barcode" src="https://barcode.tec-it.com/barcode.ashx?data=<?= $row['kode_user']; ?>&code=Code128&translate-esc=true" 
+                                 style="max-width: 200px; height: 60px; margin: 10px 0;" alt="Barcode">
+                            
+                            <!-- Kode Anggota di bawah barcode -->
+                            <p style="font-size: 14px; font-weight: bold; margin: 5px 0;"><?= $row['kode_user']; ?></p>
+                        </div>
+                        
+                        <!-- Print Card Button -->
+                        <div style="text-align: center; margin-top: 15px;">
+                            <button onclick="cetakKartu()" class="btn btn-success btn-block" style="font-weight: bold;">
+                                <i class="fa fa-print"></i> Cetak Kartu Anggota
+                            </button>
+                        </div>
                     </div>
                     <!-- /.box-body -->
                 </div>
@@ -147,9 +166,104 @@
     </section>
     <!-- /.content -->
 </div>
+
+<!-- Modal Cetak Kartu -->
+<div class="modal fade" id="modalCetakKartu" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title" style="font-family: 'Quicksand', sans-serif; font-weight: bold;">Kartu Anggota Perpustakaan</h4>
+            </div>
+            <div class="modal-body" id="kartuAnggota">
+                <!-- Konten Kartu -->
+                <div style="border: 3px solid #3c8dbc; border-radius: 15px; padding: 20px; background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%); max-width: 400px; margin: 0 auto;">
+                    <!-- Header Kartu -->
+                    <div style="text-align: center; border-bottom: 2px solid #3c8dbc; padding-bottom: 10px; margin-bottom: 15px;">
+                        <h3 style="color: #3c8dbc; font-weight: bold; margin: 0; font-family: 'Quicksand', sans-serif;">KARTU ANGGOTA</h3>
+                        <p style="color: #666; margin: 5px 0; font-size: 14px;">Perpustakaan Sekolah</p>
+                    </div>
+                    
+                    <!-- Foto dan Info -->
+                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                        <img src="../../assets/dist/img/avatar5.png" style="width: 80px; height: 80px; border-radius: 10px; margin-right: 15px; border: 2px solid #3c8dbc;">
+                        <div>
+                            <p style="margin: 2px 0; font-size: 14px;"><strong>Nama:</strong> <?= $row['fullname']; ?></p>
+                            <p style="margin: 2px 0; font-size: 14px;"><strong>NIS:</strong> <?= $row['nis']; ?></p>
+                            <p style="margin: 2px 0; font-size: 14px;"><strong>Kelas:</strong> <?= $row['kelas']; ?></p>
+                            <p style="margin: 2px 0; font-size: 14px;"><strong>Kode:</strong> <?= $row['kode_user']; ?></p>
+                        </div>
+                    </div>
+                    
+                    <!-- Barcode -->
+                    <div style="text-align: center; background: white; padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
+                        <img src="https://barcode.tec-it.com/barcode.ashx?data=<?= $row['kode_user']; ?>&code=Code128&translate-esc=true" 
+                             style="max-width: 180px; height: 50px;" alt="Barcode">
+                        <p style="font-size: 12px; font-weight: bold; margin: 5px 0;"><?= $row['kode_user']; ?></p>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div style="text-align: center; margin-top: 15px; border-top: 1px solid #ddd; padding-top: 10px;">
+                        <p style="font-size: 11px; color: #666; margin: 0;">Valid untuk tahun akademik aktif</p>
+                        <p style="font-size: 11px; color: #666; margin: 0;">Harap dibawa saat meminjam buku</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
+                <button type="button" onclick="printKartu()" class="btn btn-primary">
+                    <i class="fa fa-print"></i> Print
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- jQuery 3 -->
 <script src="../../assets/bower_components/jquery/dist/jquery.min.js"></script>
 <script src="../../assets/dist/js/sweetalert.min.js"></script>
+
+<!-- Script untuk Cetak Kartu -->
+<script>
+function cetakKartu() {
+    $('#modalCetakKartu').modal('show');
+}
+
+function printKartu() {
+    var printContents = document.getElementById('kartuAnggota').innerHTML;
+    var originalContents = document.body.innerHTML;
+    
+    document.body.innerHTML = `
+        <html>
+        <head>
+            <title>Cetak Kartu Anggota</title>
+            <style>
+                body { 
+                    font-family: Arial, sans-serif; 
+                    margin: 20px;
+                    background: white;
+                }
+                @media print {
+                    body { margin: 0; }
+                    .no-print { display: none; }
+                }
+            </style>
+        </head>
+        <body>
+            ${printContents}
+        </body>
+        </html>
+    `;
+    
+    window.print();
+    document.body.innerHTML = originalContents;
+    $('#modalCetakKartu').modal('hide');
+    
+    // Reload scripts after print
+    location.reload();
+}
+</script>
+
 <!-- Pesan Berhasil Edit -->
 <script>
     <?php
@@ -163,6 +277,7 @@
     $_SESSION['berhasil'] = '';
     ?>
 </script>
+
 <!-- Pesan Gagal Edit -->
 <script>
     <?php
@@ -176,6 +291,7 @@
     $_SESSION['gagal'] = '';
     ?>
 </script>
+
 <!-- Swal Hapus Data -->
 <script>
     $('.btn-del').on('click', function(e) {

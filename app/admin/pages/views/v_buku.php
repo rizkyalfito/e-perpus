@@ -16,7 +16,6 @@
                     var yy = date.getYear();
                     var year = (yy < 1000) ? yy + 1900 : yy;
                     document.write(thisDay + ', ' + day + ' ' + months[month] + ' ' + year);
-                    //
                 </script>
             </small>
         </h1>
@@ -49,6 +48,7 @@
                                     <th>Buku Baik</th>
                                     <th>Buku Rusak</th>
                                     <th>Jumlah Buku</th>
+                                    <th>Barcode</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
@@ -70,14 +70,20 @@
                                         <td><?php
                                             $j_buku_rusak = $row['j_buku_rusak'];
                                             $j_buku_baik = $row['j_buku_baik'];
-
                                             echo $j_buku_rusak + $j_buku_baik;
                                             ?></td>
+                                        <td style="text-align: center;">
+                                            <button onclick="lihatBarcode('<?= $row['isbn']; ?>', '<?= addslashes($row['judul_buku']); ?>', '<?= addslashes($row['pengarang']); ?>')" 
+                                                    class="btn btn-success btn-sm" title="Lihat Barcode">
+                                                <i class="fa fa-barcode"></i>
+                                            </button>
+                                        </td>
                                         <td>
                                             <a href="#" data-target="#modalEditBuku<?= $row['id_buku']; ?>" data-toggle="modal" class="btn btn-info btn-sm"><i class="fa fa-edit"></i></a>
                                             <a href="pages/function/Buku.php?act=hapus&id=<?= $row['id_buku']; ?>" class="btn btn-danger btn-sm btn-del"><i class="fa fa-trash"></i></a>
                                         </td>
                                     </tr>
+                                    
                                     <!-- Modal Edit -->
                                     <div class="modal fade" id="modalEditBuku<?= $row['id_buku']; ?>">
                                         <div class="modal-dialog">
@@ -100,7 +106,6 @@
                                                                 <option selected value="<?= $row['kategori_buku']; ?>"><?= $row['kategori_buku']; ?> ( Dipilih Sebelumnya )</option>
                                                                 <?php
                                                                 include "../../config/koneksi.php";
-
                                                                 $sql = mysqli_query($koneksi, "SELECT * FROM kategori");
                                                                 while ($data = mysqli_fetch_array($sql)) {
                                                                 ?>
@@ -116,7 +121,6 @@
                                                                 <option selected value="<?= $row['penerbit_buku']; ?>"><?= $row['penerbit_buku']; ?> ( Dipilih Sebelumnya )</option>
                                                                 <?php
                                                                 include "../../config/koneksi.php";
-
                                                                 $sql = mysqli_query($koneksi, "SELECT * FROM penerbit");
                                                                 while ($data = mysqli_fetch_array($sql)) {
                                                                 ?>
@@ -152,9 +156,7 @@
                                                     </div>
                                                 </form>
                                             </div>
-                                            <!-- /.modal-content -->
                                         </div>
-                                        <!-- /.modal-dialog -->
                                     </div>
                                     <!-- /. Modal Edit -->
                                 </tbody>
@@ -173,6 +175,8 @@
     </section>
     <!-- /.content -->
 </div>
+
+<!-- Modal Tambah Buku -->
 <div class="modal fade" id="modalTambahBuku">
     <div class="modal-dialog">
         <div class="modal-content" style="border-radius: 5px;">
@@ -193,7 +197,6 @@
                             <option selected>-- Harap pilih kategori buku --</option>
                             <?php
                             include "../../config/koneksi.php";
-
                             $sql = mysqli_query($koneksi, "SELECT * FROM kategori");
                             while ($data = mysqli_fetch_array($sql)) {
                             ?>
@@ -209,7 +212,6 @@
                             <option selected disabled>-- Harap Pilih Penerbit Buku --</option>
                             <?php
                             include "../../config/koneksi.php";
-
                             $sql = mysqli_query($koneksi, "SELECT * FROM penerbit");
                             while ($data = mysqli_fetch_array($sql)) {
                             ?>
@@ -245,19 +247,226 @@
                 </div>
             </form>
         </div>
-        <!-- /.modal-content -->
     </div>
-    <!-- /.modal-dialog -->
 </div>
-<!-- /.modal -->
+
+<!-- Modal Barcode Buku -->
+<div class="modal fade" id="modalBarcodeBuku" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title" style="font-family: 'Quicksand', sans-serif; font-weight: bold;">
+                    <i class="fa fa-barcode"></i> Barcode Buku
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- Informasi Buku -->
+                    <div class="col-md-6">
+                        <div style="border: 2px solid #3c8dbc; border-radius: 10px; padding: 15px; background-color: #f9f9f9;">
+                            <h4 style="color: #3c8dbc; font-weight: bold; margin-bottom: 15px;">Informasi Buku</h4>
+                            <p><strong>Judul:</strong> <span id="bukuJudul"></span></p>
+                            <p><strong>Pengarang:</strong> <span id="bukuPengarang"></span></p>
+                            <p><strong>ISBN:</strong> <span id="bukuISBN"></span></p>
+                            <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                                * Barcode dibuat berdasarkan ISBN buku untuk memudahkan identifikasi dan peminjaman
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Barcode -->
+                    <div class="col-md-6">
+                        <div style="text-align: center; border: 2px dashed #28a745; border-radius: 10px; padding: 20px; background-color: #f8f9fa;">
+                            <h4 style="color: #28a745; font-weight: bold; margin-bottom: 15px;">Barcode Buku</h4>
+                            
+                            <!-- Barcode Image -->
+                            <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                                <img id="barcodeImage" src="" alt="Barcode" style="max-width: 200px; height: 60px;">
+                            </div>
+                            
+                            <!-- ISBN Number -->
+                            <p style="font-weight: bold; font-size: 14px; color: #333; margin: 10px 0;">
+                                ISBN: <span id="barcodeNumber"></span>
+                            </p>
+                            
+                            <!-- Buttons -->
+                            <div style="margin-top: 15px;">
+                                <button onclick="cetakBarcode()" class="btn btn-success btn-sm" style="margin-right: 10px;">
+                                    <i class="fa fa-print"></i> Cetak Label
+                                </button>
+                                <button onclick="downloadBarcode()" class="btn btn-info btn-sm">
+                                    <i class="fa fa-download"></i> Download
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Template untuk cetak multiple label -->
+                <div class="row" style="margin-top: 20px;">
+                    <div class="col-md-12">
+                        <div style="border: 1px solid #ddd; border-radius: 5px; padding: 15px; background-color: #fff;">
+                            <h5 style="font-weight: bold; color: #333;">
+                                <i class="fa fa-tags"></i> Cetak Multiple Label
+                            </h5>
+                            <div class="form-group" style="margin-top: 10px;">
+                                <label>Jumlah Label yang akan dicetak:</label>
+                                <div style="display: flex; align-items: center;">
+                                    <input type="number" id="jumlahLabel" class="form-control" style="width: 100px; margin-right: 10px;" value="1" min="1" max="50">
+                                    <button onclick="cetakMultipleLabel()" class="btn btn-primary btn-sm">
+                                        <i class="fa fa-print"></i> Cetak Multiple
+                                    </button>
+                                </div>
+                                <small class="text-muted">Maksimal 50 label per sekali cetak</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden div untuk template cetak -->
+<div id="templateCetak" style="display: none;">
+    <div id="contentCetak"></div>
+</div>
+
 <script>
-    function tambahBuku() {
-        $('#modalTambahBuku').modal('show');
+function tambahBuku() {
+    $('#modalTambahBuku').modal('show');
+}
+
+function lihatBarcode(isbn, judul, pengarang) {
+    // Set informasi buku
+    document.getElementById('bukuJudul').textContent = judul;
+    document.getElementById('bukuPengarang').textContent = pengarang;
+    document.getElementById('bukuISBN').textContent = isbn;
+    document.getElementById('barcodeNumber').textContent = isbn;
+    
+    // Generate barcode image
+    const barcodeUrl = `https://barcode.tec-it.com/barcode.ashx?data=${isbn}&code=Code128&translate-esc=true&width=300&height=80`;
+    document.getElementById('barcodeImage').src = barcodeUrl;
+    
+    // Show modal
+    $('#modalBarcodeBuku').modal('show');
+}
+
+function cetakBarcode() {
+    const isbn = document.getElementById('bukuISBN').textContent;
+    const judul = document.getElementById('bukuJudul').textContent;
+    const pengarang = document.getElementById('bukuPengarang').textContent;
+    
+    cetakLabel(isbn, judul, pengarang, 1);
+}
+
+function cetakMultipleLabel() {
+    const jumlah = document.getElementById('jumlahLabel').value;
+    const isbn = document.getElementById('bukuISBN').textContent;
+    const judul = document.getElementById('bukuJudul').textContent;
+    const pengarang = document.getElementById('bukuPengarang').textContent;
+    
+    if (jumlah < 1 || jumlah > 50) {
+        alert('Jumlah label harus antara 1-50');
+        return;
     }
+    
+    cetakLabel(isbn, judul, pengarang, parseInt(jumlah));
+}
+
+function cetakLabel(isbn, judul, pengarang, jumlah) {
+    let content = `
+        <html>
+        <head>
+            <title>Label Barcode Buku</title>
+            <style>
+                body { 
+                    font-family: Arial, sans-serif; 
+                    margin: 10px;
+                    background: white;
+                }
+                .label {
+                    width: 2.5in;
+                    height: 1in;
+                    border: 1px solid #000;
+                    padding: 5px;
+                    margin: 5px;
+                    display: inline-block;
+                    text-align: center;
+                    vertical-align: top;
+                    page-break-inside: avoid;
+                }
+                .label h6 {
+                    font-size: 9px;
+                    margin: 2px 0;
+                    font-weight: bold;
+                }
+                .label p {
+                    font-size: 7px;
+                    margin: 1px 0;
+                }
+                .label img {
+                    width: 120px;
+                    height: 25px;
+                }
+                @media print {
+                    body { margin: 0; }
+                    .label { 
+                        margin: 2px;
+                        border: 1px solid #000;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+    `;
+    
+    for (let i = 0; i < jumlah; i++) {
+        content += `
+            <div class="label">
+                <h6>${judul.length > 25 ? judul.substring(0, 25) + '...' : judul}</h6>
+                <p>Pengarang: ${pengarang}</p>
+                <img src="https://barcode.tec-it.com/barcode.ashx?data=${isbn}&code=Code128&translate-esc=true&width=200&height=50" alt="Barcode">
+                <p><strong>ISBN: ${isbn}</strong></p>
+            </div>
+        `;
+    }
+    
+    content += `
+        </body>
+        </html>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(content);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+}
+
+function downloadBarcode() {
+    const isbn = document.getElementById('bukuISBN').textContent;
+    const barcodeUrl = `https://barcode.tec-it.com/barcode.ashx?data=${isbn}&code=Code128&translate-esc=true&width=400&height=100&download=true`;
+    
+    // Create temporary link to download
+    const link = document.createElement('a');
+    link.href = barcodeUrl;
+    link.download = `barcode_${isbn}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
 </script>
+
 <!-- jQuery 3 -->
 <script src="../../assets/bower_components/jquery/dist/jquery.min.js"></script>
 <script src="../../assets/dist/js/sweetalert.min.js"></script>
+
 <!-- Pesan Berhasil Edit -->
 <script>
     <?php
@@ -271,6 +480,7 @@
     $_SESSION['berhasil'] = '';
     ?>
 </script>
+
 <!-- Notif Gagal -->
 <script>
     <?php
@@ -284,6 +494,7 @@
     $_SESSION['gagal'] = '';
     ?>
 </script>
+
 <!-- Swal Hapus Data -->
 <script>
     $('.btn-del').on('click', function(e) {
