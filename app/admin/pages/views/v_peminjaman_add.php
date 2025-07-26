@@ -1,3 +1,4 @@
+<!-- v_peminjaman.add.php  -->
 <!-- Content Wrapper. Contains page content -->
 <div class="content-wrapper">
     <!-- Content Header (Page header) -->
@@ -120,7 +121,7 @@
                             </h3>
                         </div>
 
-                        <form action="function/Peminjaman.php?aksi=pinjam" method="POST">
+                        <form id="peminjamanForm" onsubmit="return submitTransaksi(this, 'peminjaman')">
                             <div class="box-body">
                                 <!-- Data Anggota Section -->
                                 <div class="row">
@@ -253,7 +254,7 @@
                             </h3>
                         </div>
 
-                        <form action="function/Peminjaman.php?aksi=pengembalian" method="POST">
+                        <form id="pengembalianForm" onsubmit="return submitTransaksi(this, 'pengembalian')">
                             <div class="box-body">
                                 <!-- Data Anggota Section -->
                                 <div class="row">
@@ -392,326 +393,100 @@
     <!-- /.content -->
 </div>
 
-<!-- Include QuaggaJS for Barcode Scanning -->
+<!-- Include Required Libraries -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.min.js"></script>
 
-<script>
-let scannerActive = false;
-let currentTransaction = 'peminjaman';
+<!-- Include Custom Transaction JavaScript -->
+<script src="../function/transaksi.js"></script>
 
-// Sample data - In real implementation, this would come from database via AJAX
-const anggotaData = {
-    'AP001': { nama: 'Gunawan', kelas: 'X - Administrasi Perkantoran' },
-    'AP002': { nama: 'Siti Nurhaliza', kelas: 'XI - Administrasi Perkantoran' },
-    'RPL001': { nama: 'Ahmad Rizki', kelas: 'XII - Rekayasa Perangkat Lunak' }
-};
-
-const bukuData = {
-    '9781234567890': { 
-        judul: 'Pemrograman Web Dasar', 
-        pengarang: 'John Doe', 
-        stok: '5 buku tersedia' 
-    },
-    '9789876543210': { 
-        judul: 'Basis Data MySQL', 
-        pengarang: 'Jane Smith', 
-        stok: '3 buku tersedia' 
-    }
-};
-
-// Sample data for borrowed books (for return process)
-const peminjamanData = {
-    'RPL001_9781234567890': {
-        tanggal_peminjaman: '15-07-2025',
-        batas_kembali: '29-07-2025',
-        status: 'Belum Terlambat'
-    },
-    'AP001_9789876543210': {
-        tanggal_peminjaman: '10-07-2025',
-        batas_kembali: '24-07-2025',
-        status: 'Terlambat'
-    }
-};
-
-// Switch between transaction types
-function switchTransaction(type) {
-    currentTransaction = type;
-    
-    // Update button states
-    document.getElementById('peminjamanBtn').classList.remove('active');
-    document.getElementById('pengembalianBtn').classList.remove('active');
-    
-    if (type === 'peminjaman') {
-        document.getElementById('peminjamanBtn').classList.add('active');
-        document.getElementById('peminjamanSection').style.display = 'block';
-        document.getElementById('pengembalianSection').style.display = 'none';
-    } else {
-        document.getElementById('pengembalianBtn').classList.add('active');
-        document.getElementById('peminjamanSection').style.display = 'none';
-        document.getElementById('pengembalianSection').style.display = 'block';
-    }
-    
-    // Clear all forms when switching
-    clearAllForms();
+<style>
+/* Custom Alert Styles */
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 4px;
 }
 
-function toggleScanner() {
-    const section = document.getElementById('scannerSection');
-    const button = document.getElementById('scannerToggle');
-    
-    if (section.style.display === 'none') {
-        section.style.display = 'block';
-        button.innerHTML = '<i class="fa fa-camera"></i> Sembunyikan Scanner';
-        button.className = 'btn btn-warning btn-sm';
-    } else {
-        section.style.display = 'none';
-        button.innerHTML = '<i class="fa fa-camera"></i> Aktifkan Scanner';
-        button.className = 'btn btn-info btn-sm';
-        stopScanner();
-    }
+.alert-success {
+    color: #3c763d;
+    background-color: #dff0d8;
+    border-color: #d6e9c6;
 }
 
-function startScanner() {
-    if (scannerActive) return;
-    
-    Quagga.init({
-        inputStream: {
-            name: "Live",
-            type: "LiveStream",
-            target: document.querySelector('#scanner'),
-            constraints: {
-                width: 400,
-                height: 300,
-                facingMode: "environment"
-            }
-        },
-        locator: {
-            patchSize: "medium",
-            halfSample: true
-        },
-        numOfWorkers: 2,
-        decoder: {
-            readers: ["code_128_reader", "ean_reader", "ean_8_reader", "code_39_reader"]
-        },
-        locate: true
-    }, function(err) {
-        if (err) {
-            console.log(err);
-            alert('Tidak dapat mengakses kamera!');
-            return;
-        }
-        console.log("Initialization finished. Ready to start");
-        Quagga.start();
-        scannerActive = true;
-        document.getElementById('startBtn').disabled = true;
-        document.getElementById('stopBtn').disabled = false;
-    });
-
-    Quagga.onDetected(detected);
+.alert-danger {
+    color: #a94442;
+    background-color: #f2dede;
+    border-color: #ebccd1;
 }
 
-function stopScanner() {
-    if (!scannerActive) return;
-    
-    Quagga.stop();
-    scannerActive = false;
-    document.getElementById('startBtn').disabled = false;
-    document.getElementById('stopBtn').disabled = true;
+.alert-warning {
+    color: #8a6d3b;
+    background-color: #fcf8e3;
+    border-color: #faebcc;
 }
 
-function detected(result) {
-    const code = result.codeResult.code;
-    console.log("Barcode detected:", code);
-    
-    // Stop scanner after successful scan
-    stopScanner();
-    
-    // Process the scanned code
-    processScannedCode(code);
+.alert-info {
+    color: #31708f;
+    background-color: #d9edf7;
+    border-color: #bce8f1;
 }
 
-function processScannedCode(code) {
-    // Check if it's an anggota code (starts with letters)
-    if (/^[A-Z]/.test(code)) {
-        processAnggotaCode(code);
-    } 
-    // Check if it's a book ISBN (numeric, usually 10 or 13 digits)
-    else if (/^\d{10,13}$/.test(code)) {
-        processBukuCode(code);
-    }
-    else {
-        alert('Format barcode tidak sesuai. Pastikan scan kartu anggota atau ISBN buku.');
-    }
+/* Scanner Styles */
+#scanner canvas {
+    width: 100% !important;
+    height: auto !important;
+    border: 2px solid #007bb6;
+    border-radius: 5px;
 }
 
-function processAnggotaCode(kode) {
-    const suffix = currentTransaction === 'peminjaman' ? 'Pinjam' : 'Kembali';
-    
-    document.getElementById('kodeAnggota' + suffix).value = kode;
-    
-    // In real implementation, this would be an AJAX call to get member data
-    if (anggotaData[kode]) {
-        document.getElementById('namaAnggota' + suffix).value = anggotaData[kode].nama;
-        document.getElementById('kelasAnggota' + suffix).value = anggotaData[kode].kelas;
-        document.getElementById('anggotaStatus' + suffix).style.display = 'block';
-        
-        alert(`Anggota Ditemukan!\n${anggotaData[kode].nama} - ${anggotaData[kode].kelas}`);
-    } else {
-        if (currentTransaction === 'peminjaman') {
-            clearAnggotaPinjam();
-        } else {
-            clearAnggotaKembali();
-        }
-        alert(`Anggota Tidak Ditemukan\nKode anggota ${kode} tidak terdaftar dalam sistem.`);
+/* Form Animation */
+.transaction-section {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Button Hover Effects */
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+}
+
+/* Loading Spinner */
+.spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 2s linear infinite;
+    margin: 0 auto 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .btn-group-lg .btn {
+        padding: 10px 20px;
+        font-size: 14px;
     }
     
-    checkFormCompletion();
-}
-
-function processBukuCode(isbn) {
-    const suffix = currentTransaction === 'peminjaman' ? 'Pinjam' : 'Kembali';
-    
-    document.getElementById('isbnBuku' + suffix).value = isbn;
-    
-    // In real implementation, this would be an AJAX call to get book data
-    if (bukuData[isbn]) {
-        document.getElementById('judulBuku' + suffix).value = bukuData[isbn].judul;
-        
-        if (currentTransaction === 'peminjaman') {
-            document.getElementById('pengarangBuku' + suffix).value = bukuData[isbn].pengarang;
-            document.getElementById('stokBuku' + suffix).value = bukuData[isbn].stok;
-        } else {
-            // For return, get loan data
-            const anggotaKode = document.getElementById('kodeAnggotaKembali').value;
-            const loanKey = anggotaKode + '_' + isbn;
-            
-            if (peminjamanData[loanKey]) {
-                document.getElementById('tanggalPeminjamanKembali').value = peminjamanData[loanKey].tanggal_peminjaman;
-                document.getElementById('statusKeterlambatan').value = peminjamanData[loanKey].status;
-            }
-        }
-        
-        document.getElementById('bukuStatus' + suffix).style.display = 'block';
-        
-        alert(`Buku Ditemukan!\n${bukuData[isbn].judul} - ${bukuData[isbn].pengarang}`);
-    } else {
-        if (currentTransaction === 'peminjaman') {
-            clearBukuPinjam();
-        } else {
-            clearBukuKembali();
-        }
-        alert(`Buku Tidak Ditemukan\nISBN ${isbn} tidak terdaftar dalam sistem.`);
+    #scanner {
+        max-width: 300px;
     }
     
-    checkFormCompletion();
-}
-
-function processManualInput() {
-    const input = document.getElementById('manualInput').value.trim();
-    if (input) {
-        processScannedCode(input);
-        document.getElementById('manualInput').value = '';
+    .box-body {
+        padding: 10px;
     }
 }
-
-// Clear functions for peminjaman
-function clearAnggotaPinjam() {
-    document.getElementById('kodeAnggotaPinjam').value = '';
-    document.getElementById('namaAnggotaPinjam').value = '';
-    document.getElementById('kelasAnggotaPinjam').value = '';
-    document.getElementById('anggotaStatusPinjam').style.display = 'none';
-    checkFormCompletion();
-}
-
-function clearBukuPinjam() {
-    document.getElementById('isbnBukuPinjam').value = '';
-    document.getElementById('judulBukuPinjam').value = '';
-    document.getElementById('pengarangBukuPinjam').value = '';
-    document.getElementById('stokBukuPinjam').value = '';
-    document.getElementById('bukuStatusPinjam').style.display = 'none';
-    checkFormCompletion();
-}
-
-// Clear functions for pengembalian
-function clearAnggotaKembali() {
-    document.getElementById('kodeAnggotaKembali').value = '';
-    document.getElementById('namaAnggotaKembali').value = '';
-    document.getElementById('kelasAnggotaKembali').value = '';
-    document.getElementById('anggotaStatusKembali').style.display = 'none';
-    checkFormCompletion();
-}
-
-function clearBukuKembali() {
-    document.getElementById('isbnBukuKembali').value = '';
-    document.getElementById('judulBukuKembali').value = '';
-    document.getElementById('tanggalPeminjamanKembali').value = '';
-    document.getElementById('statusKeterlambatan').value = '';
-    document.getElementById('bukuStatusKembali').style.display = 'none';
-    checkFormCompletion();
-}
-
-function clearAllForms() {
-    clearAnggotaPinjam();
-    clearBukuPinjam();
-    clearAnggotaKembali();
-    clearBukuKembali();
-}
-
-function checkFormCompletion() {
-    if (currentTransaction === 'peminjaman') {
-        const anggota = document.getElementById('namaAnggotaPinjam').value;
-        const buku = document.getElementById('judulBukuPinjam').value;
-        const submitBtn = document.getElementById('submitBtnPinjam');
-        
-        if (anggota && buku) {
-            submitBtn.disabled = false;
-            submitBtn.className = 'btn btn-success btn-block';
-        } else {
-            submitBtn.disabled = true;
-            submitBtn.className = 'btn btn-success btn-block';
-        }
-    } else {
-        const anggota = document.getElementById('namaAnggotaKembali').value;
-        const buku = document.getElementById('judulBukuKembali').value;
-        const submitBtn = document.getElementById('submitBtnKembali');
-        
-        if (anggota && buku) {
-            submitBtn.disabled = false;
-            submitBtn.className = 'btn btn-danger btn-block';
-        } else {
-            submitBtn.disabled = true;
-            submitBtn.className = 'btn btn-danger btn-block';
-        }
-    }
-}
-
-// Handle Enter key for manual input
-document.getElementById('manualInput').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        processManualInput();
-    }
-});
-
-// Handle kondisi buku change for denda calculation
-document.addEventListener('change', function(e) {
-    if (e.target.name === 'kondisiBukuSaatDikembalikan') {
-        const kondisi = e.target.value;
-        const dendaField = document.getElementById('dendaPreview');
-        
-        if (kondisi === 'Baik') {
-            dendaField.value = 'Tidak ada denda';
-        } else if (kondisi === 'Rusak') {
-            dendaField.value = 'Rp 20.000';
-        } else if (kondisi === 'Hilang') {
-            dendaField.value = 'Rp 50.000';
-        }
-    }
-});
-
-// Initialize form check on page load
-document.addEventListener('DOMContentLoaded', function() {
-    checkFormCompletion();
-});
-</script>
+</style>

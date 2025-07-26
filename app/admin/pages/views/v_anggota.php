@@ -48,6 +48,7 @@
                                     <th>Nama Lengkap</th>
                                     <th>Kelas</th>
                                     <th>Alamat</th>
+                                    <th>Barcode</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
@@ -66,11 +67,19 @@
                                         <td><?php echo $row['fullname']; ?></td>
                                         <td><?php echo $row['kelas']; ?></td>
                                         <td><?php echo $row['alamat']; ?></td>
+                                        <td style="text-align: center;">
+                                            <img src="https://barcode.tec-it.com/barcode.ashx?data=<?= $row['kode_user']; ?>&code=Code128&translate-esc=true" 
+                                                 style="max-width: 100px; height: 30px;" alt="Barcode">
+                                            <br>
+                                            <small><?= $row['kode_user']; ?></small>
+                                        </td>
                                         <td>
                                             <a href="#" class="btn btn-info btn-sm" data-toggle="modal" data-target="#modalEditAnggota<?php echo $row['id_user']; ?>"><i class="fa fa-edit"></i></a>
+                                            <a href="#" class="btn btn-success btn-sm" onclick="lihatKartu('<?php echo $row['id_user']; ?>')"><i class="fa fa-id-card"></i></a>
                                             <a href="pages/function/Anggota.php?aksi=hapus&id=<?= $row['id_user']; ?>" class="btn btn-danger btn-sm btn-del"><i class="fa fa-trash"></i></a>
                                         </td>
                                     </tr>
+                                    
                                     <!-- Modal Edit Anggota -->
                                     <div class="modal fade" id="modalEditAnggota<?php echo $row['id_user']; ?>">
                                         <div class="modal-dialog">
@@ -162,6 +171,62 @@
                                         <!-- /.modal-dialog -->
                                     </div>
                                     <!-- /. Modal Edit Anggota-->
+
+                                    <!-- Modal Lihat Kartu Anggota -->
+                                    <div class="modal fade" id="modalKartuAnggota<?php echo $row['id_user']; ?>">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                    <h4 class="modal-title" style="font-family: 'Quicksand', sans-serif; font-weight: bold;">
+                                                        Kartu Anggota - <?= $row['fullname']; ?>
+                                                    </h4>
+                                                </div>
+                                                <div class="modal-body" id="kartuAnggota<?php echo $row['id_user']; ?>">
+                                                    <!-- Konten Kartu -->
+                                                    <div style="border: 3px solid #3c8dbc; border-radius: 15px; padding: 20px; background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%); max-width: 400px; margin: 0 auto;">
+                                                        <!-- Header Kartu -->
+                                                        <div style="text-align: center; border-bottom: 2px solid #3c8dbc; padding-bottom: 10px; margin-bottom: 15px;">
+                                                            <h3 style="color: #3c8dbc; font-weight: bold; margin: 0; font-family: 'Quicksand', sans-serif;">KARTU ANGGOTA</h3>
+                                                            <p style="color: #666; margin: 5px 0; font-size: 14px;">Perpustakaan Sekolah</p>
+                                                        </div>
+                                                        
+                                                        <!-- Foto dan Info -->
+                                                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                                                            <img src="../../assets/dist/img/avatar5.png" style="width: 80px; height: 80px; border-radius: 10px; margin-right: 15px; border: 2px solid #3c8dbc;">
+                                                            <div>
+                                                                <p style="margin: 2px 0; font-size: 14px;"><strong>Nama:</strong> <?= $row['fullname']; ?></p>
+                                                                <p style="margin: 2px 0; font-size: 14px;"><strong>NIS:</strong> <?= $row['nis']; ?></p>
+                                                                <p style="margin: 2px 0; font-size: 14px;"><strong>Kelas:</strong> <?= $row['kelas']; ?></p>
+                                                                <p style="margin: 2px 0; font-size: 14px;"><strong>Kode:</strong> <?= $row['kode_user']; ?></p>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <!-- Barcode -->
+                                                        <div style="text-align: center; background: white; padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
+                                                            <img src="https://barcode.tec-it.com/barcode.ashx?data=<?= $row['kode_user']; ?>&code=Code128&translate-esc=true" 
+                                                                 style="max-width: 180px; height: 50px;" alt="Barcode">
+                                                            <p style="font-size: 12px; font-weight: bold; margin: 5px 0;"><?= $row['kode_user']; ?></p>
+                                                        </div>
+                                                        
+                                                        <!-- Footer -->
+                                                        <div style="text-align: center; margin-top: 15px; border-top: 1px solid #ddd; padding-top: 10px;">
+                                                            <p style="font-size: 11px; color: #666; margin: 0;">Valid untuk tahun akademik aktif</p>
+                                                            <p style="font-size: 11px; color: #666; margin: 0;">Harap dibawa saat meminjam buku</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
+                                                    <button type="button" onclick="printKartuAnggota('<?php echo $row['id_user']; ?>')" class="btn btn-primary">
+                                                        <i class="fa fa-print"></i> Print Kartu
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- /. Modal Kartu Anggota-->
+
                                 </tbody>
                             <?php
                             }
@@ -178,6 +243,8 @@
     </section>
     <!-- /.content -->
 </div>
+
+<!-- Modal Tambah Anggota -->
 <div class="modal fade" id="modalTambahAnggota">
     <div class="modal-dialog">
         <div class="modal-content" style="border-radius: 5px;">
@@ -252,7 +319,7 @@
                             <option value="XI - Teknik Kendaraan Ringan">XI - Teknik Kendaraan Ringan</option>
                             <option value="XI - Teknik Komputer dan Jaringan">XI - Teknik Komputer dan Jaringan</option>
                             <option value="XI - Teknik Sepeda Motor">XI - Teknik Sepeda Motor</option>
-                            <!-- XI -->
+                            <!-- XII -->
                             <option disabled>------------------------------------------</option>
                             <option value="XII - Administrasi Perkantoran">XII - Administrasi Perkantoran</option>
                             <option value="XII - Farmasi">XII - Farmasi</option>
@@ -279,14 +346,56 @@
     <!-- /.modal-dialog -->
 </div>
 <!-- /.modal -->
+
+<!-- jQuery 3 -->
+<script src="../../assets/bower_components/jquery/dist/jquery.min.js"></script>
+<script src="../../assets/dist/js/sweetalert.min.js"></script>
+
+<!-- Scripts -->
 <script>
     function tambahAnggota() {
         $('#modalTambahAnggota').modal('show');
     }
+
+    function lihatKartu(idUser) {
+        $('#modalKartuAnggota' + idUser).modal('show');
+    }
+
+    function printKartuAnggota(idUser) {
+        var printContents = document.getElementById('kartuAnggota' + idUser).innerHTML;
+        var originalContents = document.body.innerHTML;
+        
+        document.body.innerHTML = `
+            <html>
+            <head>
+                <title>Cetak Kartu Anggota</title>
+                <style>
+                    body { 
+                        font-family: Arial, sans-serif; 
+                        margin: 20px;
+                        background: white;
+                    }
+                    @media print {
+                        body { margin: 0; }
+                        .no-print { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                ${printContents}
+            </body>
+            </html>
+        `;
+        
+        window.print();
+        document.body.innerHTML = originalContents;
+        $('#modalKartuAnggota' + idUser).modal('hide');
+        
+        // Reload scripts after print
+        location.reload();
+    }
 </script>
-<!-- jQuery 3 -->
-<script src="../../assets/bower_components/jquery/dist/jquery.min.js"></script>
-<script src="../../assets/dist/js/sweetalert.min.js"></script>
+
 <!-- Pesan Berhasil Edit -->
 <script>
     <?php
@@ -300,6 +409,7 @@
     $_SESSION['berhasil'] = '';
     ?>
 </script>
+
 <!-- Pesan Gagal Edit -->
 <script>
     <?php
@@ -313,6 +423,7 @@
     $_SESSION['gagal'] = '';
     ?>
 </script>
+
 <!-- Swal Hapus Data -->
 <script>
     $('.btn-del').on('click', function(e) {

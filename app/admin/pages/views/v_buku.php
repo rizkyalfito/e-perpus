@@ -451,15 +451,47 @@ function cetakLabel(isbn, judul, pengarang, jumlah) {
 
 function downloadBarcode() {
     const isbn = document.getElementById('bukuISBN').textContent;
-    const barcodeUrl = `https://barcode.tec-it.com/barcode.ashx?data=${isbn}&code=Code128&translate-esc=true&width=400&height=100&download=true`;
+    const judul = document.getElementById('bukuJudul').textContent;
+    
+    // Alternatif 1: Gunakan parameter format=png
+    const barcodeUrl = `https://barcode.tec-it.com/barcode.ashx?data=${isbn}&code=Code128&translate-esc=true&width=400&height=100&format=png&download=true`;
+    
+    // Alternatif 2: Jika tetap tidak bisa, gunakan service lain
+    // const barcodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x100&data=${isbn}&format=png`;
     
     // Create temporary link to download
     const link = document.createElement('a');
     link.href = barcodeUrl;
-    link.download = `barcode_${isbn}.png`;
+    link.download = `barcode_${judul.replace(/[^a-zA-Z0-9]/g, '_')}_${isbn}.png`;
+    link.setAttribute('target', '_blank');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+}
+
+// Fungsi alternatif menggunakan fetch (jika server mendukung)
+function downloadBarcodeWithFetch() {
+    const isbn = document.getElementById('bukuISBN').textContent;
+    const judul = document.getElementById('bukuJudul').textContent;
+    
+    const barcodeUrl = `https://barcode.tec-it.com/barcode.ashx?data=${isbn}&code=Code128&translate-esc=true&width=400&height=100&format=png`;
+    
+    fetch(barcodeUrl)
+        .then(response => response.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `barcode_${judul.replace(/[^a-zA-Z0-9]/g, '_')}_${isbn}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        })
+        .catch(error => {
+            console.error('Error downloading barcode:', error);
+            alert('Gagal mendownload barcode. Silakan coba lagi.');
+        });
 }
 </script>
 
