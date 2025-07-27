@@ -8,9 +8,7 @@ if ($_GET['aksi'] == "tambah") {
     $fullname = $_POST['namaLengkap'];
     $username = addslashes(strtolower($_POST['username']));
     $password = $_POST['password'];
-    $kls = $_POST['kelas'];
-    $jrs = $_POST['jurusan'];
-    $kelas = $kls . $jrs;
+    $kelas = $_POST['kElas'];
     $alamat = $_POST['alamat'];
     $verif = "Tidak";
     $role = "Anggota";
