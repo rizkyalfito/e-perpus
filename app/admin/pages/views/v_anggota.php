@@ -58,6 +58,13 @@
                                 $no = 1;
                                 $query = mysqli_query($koneksi, "SELECT * FROM user WHERE role = 'Anggota'");
                                 while ($row = mysqli_fetch_assoc($query)) {
+                                    // Query untuk mendapatkan foto anggota
+                                    $foto_anggota = $row['foto'];
+                                    if (!empty($foto_anggota) && $foto_anggota != 'default-avatar.png' && file_exists('../../assets/img/users/' . $foto_anggota)) {
+                                        $foto_path_anggota = '../../assets/img/users/' . $foto_anggota;
+                                    } else {
+                                        $foto_path_anggota = '../../assets/dist/img/avatar5.png';
+                                    }
                                 ?>
                                     <tr>
                                         <td><?php echo $no++; ?></td>
@@ -192,7 +199,7 @@
                                                         
                                                         <!-- Foto dan Info -->
                                                         <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                                                            <img src="../../assets/dist/img/avatar5.png" style="width: 80px; height: 80px; border-radius: 10px; margin-right: 15px; border: 2px solid #3c8dbc;">
+                                                            <img src="<?= $foto_path_anggota; ?>" style="width: 80px; height: 80px; border-radius: 10px; margin-right: 15px; border: 2px solid #3c8dbc; object-fit: cover;">
                                                             <div>
                                                                 <p style="margin: 2px 0; font-size: 14px;"><strong>Nama:</strong> <?= $row['fullname']; ?></p>
                                                                 <p style="margin: 2px 0; font-size: 14px;"><strong>NIS:</strong> <?= $row['nis']; ?></p>

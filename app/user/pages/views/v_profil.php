@@ -83,47 +83,47 @@
                                 <input type="text" class="form-control" value="<?= $row['password']; ?>" name="Password" required>
                             </div>
                             <div class="form-group">
-                                <label>Kelas <small style="color: red;">* Wajib diisi</small></label>
-                                <select class="form-control" name="Kelas" required>
-                                    <?php
-                                    if (empty($row['kelas'])) {
-                                        echo "<option value='' selected disabled>Silahkan pilih kelas dari [" . $row['fullname'] . "]</option>";
-                                    } else {
-                                        echo "<option selected value='" . $row['kelas'] . "'>" . $row['kelas'] . " ( Dipilih Sebelumnya )</option>";
-                                    }
-                                    ?>
-                                    <option disabled>------------------------------------------</option>
-                                    <!-- X -->
-                                    <option value="X - Administrasi Perkantoran">X - Administrasi Perkantoran</option>
-                                    <option value="X - Farmasi">X - Farmasi</option>
-                                    <option value="X - Perbankan">X - Perbankan</option>
-                                    <option value="X - Rekayasa Perangkat Lunak">X - Rekayasa Perangkat Lunak</option>
-                                    <option value="X - Tata Boga">X - Tata Boga</option>
-                                    <option value="X - Teknik Kendaraan Ringan">X - Teknik Kendaraan Ringan</option>
-                                    <option value="X - Teknik Komputer dan Jaringan">X - Teknik Komputer dan Jaringan</option>
-                                    <option value="X - Teknik Sepeda Motor">X - Teknik Sepeda Motor</option>
-                                    <!-- XI -->
-                                    <option disabled>------------------------------------------</option>
-                                    <option value="XI - Administrasi Perkantoran">XI - Administrasi Perkantoran</option>
-                                    <option value="XI - Farmasi">XI - Farmasi</option>
-                                    <option value="XI - Perbankan">XI - Perbankan</option>
-                                    <option value="XI - Rekayasa Perangkat Lunak">XI - Rekayasa Perangkat Lunak</option>
-                                    <option value="XI - Tata Boga">XI - Tata Boga</option>
-                                    <option value="XI - Teknik Kendaraan Ringan">XI - Teknik Kendaraan Ringan</option>
-                                    <option value="XI - Teknik Komputer dan Jaringan">XI - Teknik Komputer dan Jaringan</option>
-                                    <option value="XI - Teknik Sepeda Motor">XI - Teknik Sepeda Motor</option>
-                                    <!-- XII -->
-                                    <option disabled>------------------------------------------</option>
-                                    <option value="XII - Administrasi Perkantoran">XII - Administrasi Perkantoran</option>
-                                    <option value="XII - Farmasi">XII - Farmasi</option>
-                                    <option value="XII - Perbankan">XII - Perbankan</option>
-                                    <option value="XII - Rekayasa Perangkat Lunak">XII - Rekayasa Perangkat Lunak</option>
-                                    <option value="XII - Tata Boga">XII - Tata Boga</option>
-                                    <option value="XII - Teknik Kendaraan Ringan">XII - Teknik Kendaraan Ringan</option>
-                                    <option value="XII - Teknik Komputer dan Jaringan">XII - Teknik Komputer dan Jaringan</option>
-                                    <option value="XII - Teknik Sepeda Motor">XII - Teknik Sepeda Motor</option>
-                                </select>
-                            </div>
+                            <label>Kelas <small style="color: red;">* Wajib diisi</small></label>
+                            <select class="form-control" name="Kelas" required>
+                                <?php
+                                if (empty($row['kelas'])) {
+                                    echo "<option value='' selected disabled>Silahkan pilih kelas dari [" . $row['fullname'] . "]</option>";
+                                } else {
+                                    echo "<option selected value='" . $row['kelas'] . "'>" . $row['kelas'] . " ( Dipilih Sebelumnya )</option>";
+                                }
+                                ?>
+                                <option disabled>------------------------------------------</option>
+                                <!-- VII -->
+                                <option value="VII A">VII A</option>
+                                <option value="VII B">VII B</option>
+                                <option value="VII C">VII C</option>
+                                <option value="VII D">VII D</option>
+                                <option value="VII E">VII E</option>
+                                <option value="VII F">VII F</option>
+                                <option value="VII G">VII G</option>
+                                <option value="VII H">VII H</option>
+                                <!-- VIII -->
+                                <option disabled>------------------------------------------</option>
+                                <option value="VIII A">VIII A</option>
+                                <option value="VIII B">VIII B</option>
+                                <option value="VIII C">VIII C</option>
+                                <option value="VIII D">VIII D</option>
+                                <option value="VIII E">VIII E</option>
+                                <option value="VIII F">VIII F</option>
+                                <option value="VIII G">VIII G</option>
+                                <option value="VIII H">VIII H</option>
+                                <!-- IX -->
+                                <option disabled>------------------------------------------</option>
+                                <option value="IX A">IX A</option>
+                                <option value="IX B">IX B</option>
+                                <option value="IX C">IX C</option>
+                                <option value="IX D">IX D</option>
+                                <option value="IX E">IX E</option>
+                                <option value="IX F">IX F</option>
+                                <option value="IX G">IX G</option>
+                                <option value="IX H">IX H</option>
+                            </select>
+                        </div>
                             <div class="form-group">
                                 <label>Alamat Lengkap <small style="color: red;">* Wajib diisi</small></label>
                                 <textarea class="form-control" style="height: 80px; resize: none;" name="Alamat" required><?= $row['alamat']; ?></textarea>
@@ -359,4 +359,23 @@ function printKartu() {
                 }
             });
     })
+</script>
+
+<script>
+    function updateSidebarPhoto(newPhotoPath) {
+    // Update foto di sidebar
+    const sidebarImg = document.querySelector('.main-sidebar .user-panel .image img');
+    if (sidebarImg) {
+        sidebarImg.src = newPhotoPath;
+    }
+}
+
+// Refresh sidebar photo setelah form berhasil disubmit
+// Tambahkan ini di bagian script pesan berhasil
+<?php if (isset($_SESSION['berhasil']) && $_SESSION['berhasil'] != ''): ?>
+// Refresh foto sidebar setelah update berhasil
+setTimeout(function() {
+    location.reload(); // Atau bisa load ulang hanya bagian sidebar
+}, 1000);
+<?php endif; ?>
 </script>

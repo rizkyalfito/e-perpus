@@ -68,7 +68,19 @@
                                         <!-- start message -->
                                         <a href="lihat-pesan?id_pesan=<?= $row_pesan1['id_pesan']; ?>">
                                             <div class="pull-left">
-                                                <img src="../../assets/dist/img/avatar.png" class="img-circle" alt="User Image">
+                                                <?php
+                                                // Query untuk mendapatkan foto pengirim pesan
+                                                $pengirim_nama = $row_pesan1['pengirim'];
+                                                $query_foto_pengirim = mysqli_query($koneksi, "SELECT foto FROM user WHERE fullname = '$pengirim_nama'");
+                                                $data_foto_pengirim = mysqli_fetch_assoc($query_foto_pengirim);
+                                                
+                                                if (!empty($data_foto_pengirim['foto']) && $data_foto_pengirim['foto'] != 'default-avatar.png' && file_exists('../../assets/img/users/' . $data_foto_pengirim['foto'])) {
+                                                    $foto_path_pengirim = '../../assets/img/users/' . $data_foto_pengirim['foto'];
+                                                } else {
+                                                    $foto_path_pengirim = '../../assets/dist/img/avatar.png';
+                                                }
+                                                ?>
+                                                <img src="<?= $foto_path_pengirim; ?>" class="img-circle" alt="User Image" style="width: 40px; height: 40px; object-fit: cover;">
                                             </div>
                                             <h4>
                                                 <?php
@@ -104,7 +116,19 @@
                 <!-- User Account: style can be found in dropdown.less -->
                 <li class="dropdown user user-menu">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                        <img src="../../assets/dist/img/avatar5.png" class="user-image" alt="User Image">
+                        <?php
+                        // Query untuk mendapatkan foto user dari database
+                        $id_user = $_SESSION['id_user'];
+                        $query_foto = mysqli_query($koneksi, "SELECT foto FROM user WHERE id_user = '$id_user'");
+                        $data_foto = mysqli_fetch_assoc($query_foto);
+                        
+                        if (!empty($data_foto['foto']) && $data_foto['foto'] != 'default-avatar.png' && file_exists('../../assets/img/users/' . $data_foto['foto'])) {
+                            $foto_path = '../../assets/img/users/' . $data_foto['foto'];
+                        } else {
+                            $foto_path = '../../assets/dist/img/avatar5.png';
+                        }
+                        ?>
+                        <img src="<?= $foto_path; ?>" class="user-image" alt="User Image" style="object-fit: cover;">
 
                         <span class="hidden-xs"><?= $_SESSION['fullname']; ?>
                             <?php include "../../config/koneksi.php";
@@ -123,7 +147,7 @@
                     <ul class="dropdown-menu">
                         <!-- User image -->
                         <li class="user-header">
-                            <img src="../../assets/dist/img/avatar5.png" class="img-circle" alt="User Image">
+                            <img src="<?= $foto_path; ?>" class="img-circle" alt="User Image" style="object-fit: cover;">
 
                             <p>
                                 <?= $_SESSION['fullname']; ?>

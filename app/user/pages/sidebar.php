@@ -4,10 +4,21 @@
         <!-- Sidebar user panel -->
         <div class="user-panel">
             <div class="pull-left image">
-                <img src="../../assets/dist/img/avatar5.png" class="img-circle" alt="User Image">
+                <?php
+                // Query untuk mendapatkan foto user dari database
+                $id_user = $_SESSION['id_user'];
+                $query_foto = mysqli_query($koneksi, "SELECT foto FROM user WHERE id_user = '$id_user'");
+                $data_foto = mysqli_fetch_assoc($query_foto);
+                
+                if (!empty($data_foto['foto']) && $data_foto['foto'] != 'default-avatar.png' && file_exists('../../assets/img/users/' . $data_foto['foto'])) {
+                    $foto_path = '../../assets/img/users/' . $data_foto['foto'];
+                } else {
+                    $foto_path = '../../assets/dist/img/avatar5.png';
+                }
+                ?>
+                <img src="<?= $foto_path; ?>" class="img-circle" alt="User Image" style="width: 45px; height: 45px; object-fit: cover;">
             </div>
             <div class="pull-left info">
-
                 <p><?= $_SESSION['fullname']; ?></p>
                 <a href="#"><i class="fa fa-circle text-success"></i> Online</a>
             </div>
@@ -25,6 +36,7 @@
     </section>
     <!-- /.sidebar -->
 </aside>
+
 <div class="modal fade" id="modalLogoutConfirm">
     <div class="modal-dialog">
         <div class="modal-content" style="border-radius: 5px;">
@@ -44,6 +56,7 @@
         </div>
     </div>
 </div>
+
 <script>
     var refreshId = setInterval(function() {
         $('#jumlahPesan').load('./pages/function/Pesan.php?aksi=jumlahPesan');
