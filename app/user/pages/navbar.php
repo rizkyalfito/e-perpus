@@ -2,9 +2,9 @@
     <!-- Logo -->
     <a href="dashboard" class="logo" style="font-family: 'Quicksand', sans-serif">
         <!-- mini logo for sidebar mini 50x50 pixels -->
-        <span class="logo-mini"><b>P</b>CS</span>
-        <!-- logo for regular state and mobile devices -->
-        <span class="logo-lg"><b>Perpustakaan </b>LTE CS</span>
+        <div style="width: 50px; margin: 0 auto;">
+            <img src="../../assets/dist/img/mtsn1-luwu.png" class="img-circle" alt="User Image" style="width: 50px; height:auto">
+        </div>
     </a>
     <!-- Header Navbar: style can be found in header.less -->
     <nav class="navbar navbar-static-top">

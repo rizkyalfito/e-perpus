@@ -1,16 +1,17 @@
 <header class="main-header">
     <!-- Logo -->
-    <a href="dashboard" class="logo" style="font-family: 'Quicksand', sans-serif">
+    <a href="dashboard" class="logo" style="font-family: 'Quicksand', sans-serif; display: block;">
         <!-- mini logo for sidebar mini 50x50 pixels -->
         <span class="logo-mini"><i class="fa fa-book"></i></span>
         <!-- logo for regular state and mobile devices -->
         <?php
-        include "../../config/koneksi.php";
-
-        $sql = mysqli_query($koneksi, "SELECT * FROM identitas");
-        $row = mysqli_fetch_assoc($sql);
-        ?>
-        <span class="logo-lg"><b><?= $row['nama_app']; ?></b> <i class="fa fa-book"></i></span>
+            include "../../config/koneksi.php";
+            $sql = mysqli_query($koneksi, "SELECT * FROM identitas");
+            $row = mysqli_fetch_assoc($sql);
+            ?>
+            <div style="width: 50px; margin: 0 auto;">
+                <img src="../../assets/dist/img/mtsn1-luwu.png" class="img-circle" alt="User Image" style="width: 50px; height:auto">
+            </div>
     </a>
     <!-- Header Navbar: style can be found in header.less -->
     <nav class="navbar navbar-static-top">
