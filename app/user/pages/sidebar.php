@@ -17,6 +17,7 @@
             <li class="header">MAIN MENU</li>
             <li><a href="dashboard"><i class="fa fa-home"></i> <span>Dashboard</span></a></li>
             <li><a href="peminjaman"><i class="fa fa-file"></i> <span>Data Peminjaman</span></a></li>
+            <li><a href="data-buku"><i class="fa fa-file"></i> <span>Data Buku</span></a></li>
             <li><a href="profil-saya"><i class="fa fa-user"></i> <span>Cetak Kartu Anggota</span></a></li>
             <li class="header">LANJUTAN</li>
             <li><a href="#Logout" data-toggle="modal" data-target="#modalLogoutConfirm"><i class="fa fa-sign-out"></i> <span>Keluar</span></a></li>
