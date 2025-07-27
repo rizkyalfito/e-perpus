@@ -44,6 +44,24 @@
                         ?>
                         <div class="box-body">
                             <input name="IdUser" type="hidden" value="<?= $row['id_user']; ?>">
+                            
+                            <!-- Upload Foto Section -->
+                            <div class="form-group">
+                                <label>Foto Profil</label>
+                                <div style="margin-bottom: 10px;">
+                                    <?php 
+                                    $foto_path = !empty($row['foto']) && $row['foto'] != 'default-avatar.png' 
+                                        ? '../../assets/img/users/' . $row['foto'] 
+                                        : '../../assets/dist/img/avatar5.png';
+                                    ?>
+                                    <img id="preview-foto" src="<?= $foto_path; ?>" 
+                                         style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #ddd;">
+                                </div>
+                                <input type="file" name="foto" id="foto" accept="image/*" class="form-control" 
+                                       onchange="previewImage(this)">
+                                <small style="color: #666;">Format: JPG, PNG, GIF. Maksimal 2MB.</small>
+                            </div>
+                            
                             <div class="form-group">
                                 <label>Kode Anggota <small style="color: red;">* Tidak dapat dirubah</small></label>
                                 <input type="text" class="form-control" value="<?= $row['kode_user']; ?>" disabled>
@@ -66,10 +84,10 @@
                             </div>
                             <div class="form-group">
                                 <label>Kelas <small style="color: red;">* Wajib diisi</small></label>
-                                <select class="form-control" name="Kelas">
+                                <select class="form-control" name="Kelas" required>
                                     <?php
-                                    if ($row['kelas'] == null) {
-                                        echo "<option selected disabled>Silahkan pilih kelas dari [" . $row['fullname'] . "]</option>";
+                                    if (empty($row['kelas'])) {
+                                        echo "<option value='' selected disabled>Silahkan pilih kelas dari [" . $row['fullname'] . "]</option>";
                                     } else {
                                         echo "<option selected value='" . $row['kelas'] . "'>" . $row['kelas'] . " ( Dipilih Sebelumnya )</option>";
                                     }
@@ -128,7 +146,14 @@
                     <!-- /.box-header -->
                     <div class="box-body">
                         <!-- Avatar -->
-                        <img src="../../assets/dist/img/avatar5.png" style="width: 125px; height: 125px; display: block; margin-left: auto; margin-right: auto; margin-top: -5px; margin-bottom: 15px;" loop autoplay>
+                        <?php 
+                        $foto_display = !empty($row['foto']) && $row['foto'] != 'default-avatar.png' 
+                            ? '../../assets/img/users/' . $row['foto'] 
+                            : '../../assets/dist/img/avatar5.png';
+                        ?>
+                        <img src="<?= $foto_display; ?>" 
+                             style="width: 125px; height: 125px; display: block; margin-left: auto; margin-right: auto; margin-top: -5px; margin-bottom: 15px; border-radius: 50%; object-fit: cover; border: 3px solid #ddd;" 
+                             loop autoplay>
                         
                         <!-- Profile Information -->
                         <p style="font-weight: bold;">Kode Anggota : <?= $row['kode_user']; ?></p>
@@ -186,7 +211,8 @@
                     
                     <!-- Foto dan Info -->
                     <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                        <img src="../../assets/dist/img/avatar5.png" style="width: 80px; height: 80px; border-radius: 10px; margin-right: 15px; border: 2px solid #3c8dbc;">
+                        <img src="<?= $foto_display; ?>" 
+                             style="width: 80px; height: 80px; border-radius: 10px; margin-right: 15px; border: 2px solid #3c8dbc; object-fit: cover;">
                         <div>
                             <p style="margin: 2px 0; font-size: 14px;"><strong>Nama:</strong> <?= $row['fullname']; ?></p>
                             <p style="margin: 2px 0; font-size: 14px;"><strong>NIS:</strong> <?= $row['nis']; ?></p>
@@ -222,6 +248,21 @@
 <!-- jQuery 3 -->
 <script src="../../assets/bower_components/jquery/dist/jquery.min.js"></script>
 <script src="../../assets/dist/js/sweetalert.min.js"></script>
+
+<!-- Script untuk Preview Image -->
+<script>
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        
+        reader.onload = function(e) {
+            document.getElementById('preview-foto').src = e.target.result;
+        }
+        
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
 
 <!-- Script untuk Cetak Kartu -->
 <script>
