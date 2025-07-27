@@ -1,492 +1,653 @@
-<!-- v_peminjaman.add.php  -->
-<!-- Content Wrapper. Contains page content -->
-<div class="content-wrapper">
-    <!-- Content Header (Page header) -->
-    <section class="content-header">
-        <h1 style="font-family: 'Quicksand', sans-serif; font-weight: bold;">
-            Transaksi Perpustakaan
-            <small>
-                <script type='text/javascript'>
-                    var months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-                    var myDays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jum&#39;at', 'Sabtu'];
-                    var date = new Date();
-                    var day = date.getDate();
-                    var month = date.getMonth();
-                    var thisDay = date.getDay(),
-                        thisDay = myDays[thisDay];
-                    var yy = date.getYear();
-                    var year = (yy < 1000) ? yy + 1900 : yy;
-                    document.write(thisDay + ', ' + day + ' ' + months[month] + ' ' + year);
-                </script>
-            </small>
-        </h1>
-        <ol class="breadcrumb">
-            <li><a href="dashboard"><i class="fa fa-dashboard"></i> Dashboard</a></li>
-            <li><a href="data-peminjaman">Data Peminjaman</a></li>
-            <li class="active">Transaksi</li>
-        </ol>
-    </section>
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+            <h1 style="font-family: 'Quicksand', sans-serif; font-weight: bold;">
+                Form Transaksi Pinjam Buku
+                <small>
+                    <script type='text/javascript'>
+                        var months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                        var myDays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jum&#39;at', 'Sabtu'];
+                        var date = new Date();
+                        var day = date.getDate();
+                        var month = date.getMonth();
+                        var thisDay = date.getDay(),
+                            thisDay = myDays[thisDay];
+                        var yy = date.getYear();
+                        var year = (yy < 1000) ? yy + 1900 : yy;
+                        document.write(thisDay + ', ' + day + ' ' + months[month] + ' ' + year);
+                    </script>
+                </small>
+            </h1>
+            <ol class="breadcrumb">
+                <li><a href="dashboard"><i class="fa fa-dashboard"></i> Home</a></li>
+                <li class="active">Form Transaksi Pinjam Buku</li>
+            </ol>
+        </section>
 
-    <!-- Main content -->
-    <section class="content">
-        <div class="row">
-            <div class="col-xs-12">
-                <!-- Transaction Type Toggle -->
-                <div class="box">
-                    <div class="box-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px 10px 0 0;">
-                        <h3 class="box-title" style="font-family: 'Quicksand', sans-serif; font-weight: bold; color: white;">
-                            <i class="fa fa-exchange-alt"></i> Pilih Jenis Transaksi
-                        </h3>
-                    </div>
-                    <div class="box-body" style="text-align: center; padding: 30px;">
-                        <div class="btn-group btn-group-lg" role="group">
-                            <button type="button" class="btn btn-primary active" id="peminjamanBtn" onclick="switchTransaction('peminjaman')" style="padding: 15px 40px; border-radius: 25px 0 0 25px;">
-                                <i class="fa fa-plus-circle"></i> Peminjaman Buku
-                            </button>
-                            <button type="button" class="btn btn-success" id="pengembalianBtn" onclick="switchTransaction('pengembalian')" style="padding: 15px 40px; border-radius: 0 25px 25px 0;">
-                                <i class="fa fa-undo"></i> Pengembalian Buku
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Scanner Section -->
-                <div class="box">
-                    <div class="box-header">
-                        <h3 class="box-title" style="font-family: 'Quicksand', sans-serif; font-weight: bold;">
-                            <i class="fa fa-qrcode"></i> Scanner Barcode
-                        </h3>
-                        <div class="pull-right">
-                            <button type="button" onclick="toggleScanner()" class="btn btn-info btn-sm" id="scannerToggle">
-                                <i class="fa fa-camera"></i> Aktifkan Scanner
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div id="scannerSection" style="display: none; padding: 15px; background-color: #f8f9fa; border-bottom: 1px solid #ddd;">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div style="text-align: center; border: 2px dashed #007bb6; padding: 20px; border-radius: 10px; background: white;">
-                                    <h4 style="color: #007bb6; margin-bottom: 15px;">
-                                        <i class="fa fa-qrcode"></i> Scanner Barcode
-                                    </h4>
-                                    <div id="scanner" style="width: 100%; max-width: 400px; margin: 0 auto;"></div>
-                                    <div style="margin-top: 15px;">
-                                        <button type="button" onclick="startScanner()" class="btn btn-success btn-sm" id="startBtn">
-                                            <i class="fa fa-play"></i> Mulai Scan
-                                        </button>
-                                        <button type="button" onclick="stopScanner()" class="btn btn-danger btn-sm" id="stopBtn" disabled>
-                                            <i class="fa fa-stop"></i> Stop Scan
-                                        </button>
-                                    </div>
-                                    <p style="font-size: 12px; color: #666; margin-top: 10px;">
-                                        Arahkan kamera ke barcode anggota atau buku
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div style="border: 1px solid #ddd; padding: 15px; border-radius: 10px; background: white;">
-                                    <h5 style="color: #333; margin-bottom: 15px;">
-                                        <i class="fa fa-info-circle"></i> Petunjuk Scan
-                                    </h5>
-                                    <ul style="font-size: 13px; color: #666;">
-                                        <li><strong>Kartu Anggota:</strong> Scan barcode pada kartu anggota untuk mengisi data peminjam</li>
-                                        <li><strong>Buku:</strong> Scan barcode ISBN pada buku untuk memilih judul buku</li>
-                                        <li><strong>Pencahayaan:</strong> Pastikan area cukup terang untuk hasil scan optimal</li>
-                                        <li><strong>Jarak:</strong> Jaga jarak 10-20cm antara kamera dan barcode</li>
-                                    </ul>
-                                    
-                                    <!-- Manual Input Alternative -->
-                                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
-                                        <h6 style="color: #333; margin-bottom: 10px;">Input Manual:</h6>
-                                        <div class="form-group" style="margin-bottom: 10px;">
-                                            <input type="text" id="manualInput" class="form-control input-sm" placeholder="Ketik kode anggota atau ISBN" style="font-size: 12px;">
-                                        </div>
-                                        <button type="button" onclick="processManualInput()" class="btn btn-primary btn-xs">
-                                            <i class="fa fa-check"></i> Proses
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- PEMINJAMAN SECTION -->
-                <div id="peminjamanSection" class="transaction-section">
+        <!-- Main content -->
+        <section class="content">
+            <div class="row">
+                <div class="col-xs-12">
                     <div class="box">
-                        <div class="box-header" style="background-color: #28a745; color: white; border-radius: 10px 10px 0 0;">
-                            <h3 class="box-title" style="font-family: 'Quicksand', sans-serif; font-weight: bold; color: white;">
-                                <i class="fa fa-plus-circle"></i> Formulir Peminjaman Buku
-                            </h3>
+                        <div class="box-header">
+                            <h3 class="box-title" style="font-family: 'Quicksand', sans-serif; font-weight: bold;">Form Transaksi Pinjam Buku</h3>
                         </div>
-
-                        <form id="peminjamanForm" onsubmit="return submitTransaksi(this, 'peminjaman')">
+                        
+                        <!-- Form Peminjaman -->
+                        <form id="formPeminjaman" action="pages/function/Peminjaman.php?aksi=tambah" method="POST">
                             <div class="box-body">
-                                <!-- Data Anggota Section -->
                                 <div class="row">
+                                    <!-- Data Anggota -->
                                     <div class="col-md-6">
-                                        <div style="border: 2px solid #28a745; border-radius: 10px; padding: 15px; background-color: #f8fff8;">
-                                            <h4 style="color: #28a745; margin-bottom: 15px;">
-                                                <i class="fa fa-user"></i> Data Anggota
-                                            </h4>
-                                            
-                                            <div class="form-group">
-                                                <label>Kode Anggota <small style="color: #28a745;">* Scan kartu anggota</small></label>
-                                                <div class="input-group">
-                                                    <input type="text" class="form-control" id="kodeAnggotaPinjam" name="kodeAnggota" 
-                                                           placeholder="Scan kartu anggota atau ketik kode" readonly>
-                                                    <span class="input-group-btn">
-                                                        <button type="button" onclick="clearAnggotaPinjam()" class="btn btn-warning">
-                                                            <i class="fa fa-times"></i>
-                                                        </button>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="form-group">
-                                                <label>Nama Anggota</label>
-                                                <input type="text" class="form-control" id="namaAnggotaPinjam" name="namaAnggota" 
-                                                       placeholder="Nama akan muncul otomatis" readonly required>
-                                            </div>
-                                            
-                                            <div class="form-group">
-                                                <label>Kelas</label>
-                                                <input type="text" class="form-control" id="kelasAnggotaPinjam" 
-                                                       placeholder="Kelas akan muncul otomatis" readonly>
-                                            </div>
-                                            
-                                            <div id="anggotaStatusPinjam" style="display: none;">
-                                                <div class="alert alert-success" style="padding: 8px; font-size: 12px;">
-                                                    <i class="fa fa-check-circle"></i> <strong>Anggota Terverifikasi!</strong>
-                                                </div>
+                                        <div class="form-group">
+                                            <label>Kode Anggota</label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="kodeAnggota" placeholder="Masukkan kode anggota atau scan barcode">
+                                                <span class="input-group-btn">
+                                                    <button type="button" class="btn btn-success" onclick="scanAnggotaBarcode()">
+                                                        <i class="fa fa-qrcode"></i> Scan
+                                                    </button>
+                                                    <button type="button" class="btn btn-info" onclick="cariAnggotaManual()">
+                                                        <i class="fa fa-search"></i> Cari
+                                                    </button>
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
                                     
-                                    <!-- Data Buku Section -->
                                     <div class="col-md-6">
-                                        <div style="border: 2px solid #007bff; border-radius: 10px; padding: 15px; background-color: #f8f9ff;">
-                                            <h4 style="color: #007bff; margin-bottom: 15px;">
-                                                <i class="fa fa-book"></i> Data Buku
-                                            </h4>
-                                            
-                                            <div class="form-group">
-                                                <label>ISBN / Kode Buku <small style="color: #007bff;">* Scan barcode buku</small></label>
-                                                <div class="input-group">
-                                                    <input type="text" class="form-control" id="isbnBukuPinjam" name="isbnBuku" 
-                                                           placeholder="Scan barcode buku atau ketik ISBN" readonly>
-                                                    <span class="input-group-btn">
-                                                        <button type="button" onclick="clearBukuPinjam()" class="btn btn-warning">
-                                                            <i class="fa fa-times"></i>
-                                                        </button>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="form-group">
-                                                <label>Judul Buku</label>
-                                                <input type="text" class="form-control" id="judulBukuPinjam" name="judulBuku" 
-                                                       placeholder="Judul akan muncul otomatis" readonly required>
-                                            </div>
-                                            
-                                            <div class="form-group">
-                                                <label>Pengarang</label>
-                                                <input type="text" class="form-control" id="pengarangBukuPinjam" 
-                                                       placeholder="Pengarang akan muncul otomatis" readonly>
-                                            </div>
-                                            
-                                            <div class="form-group">
-                                                <label>Stok Tersedia</label>
-                                                <input type="text" class="form-control" id="stokBukuPinjam" 
-                                                       placeholder="Stok akan muncul otomatis" readonly>
-                                            </div>
-                                            
-                                            <div id="bukuStatusPinjam" style="display: none;">
-                                                <div class="alert alert-success" style="padding: 8px; font-size: 12px;">
-                                                    <i class="fa fa-check-circle"></i> <strong>Buku Tersedia!</strong>
-                                                </div>
+                                        <div class="form-group">
+                                            <label>Nama Anggota</label>
+                                            <input type="text" class="form-control" name="namaAnggota" id="namaAnggota" readonly>
+                                            <input type="hidden" id="idAnggota">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Info Anggota -->
+                                <div class="row" id="infoAnggotaRow" style="display: none;">
+                                    <div class="col-md-12">
+                                        <div class="alert alert-info">
+                                            <h5><strong>Informasi Anggota:</strong></h5>
+                                            <div class="row">
+                                                <div class="col-md-3"><strong>NIS:</strong> <span id="displayNIS"></span></div>
+                                                <div class="col-md-3"><strong>Kelas:</strong> <span id="displayKelas"></span></div>
+                                                <div class="col-md-3"><strong>Buku Dipinjam:</strong> <span id="displayJumlahPinjam">0</span>/3</div>
+                                                <div class="col-md-3"><strong>Alamat:</strong> <span id="displayAlamat"></span></div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                                 
-                                <!-- Form Details -->
-                                <div class="row" style="margin-top: 20px;">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Tanggal Peminjaman</label>
-                                            <input type="text" class="form-control" name="tanggalPeminjaman" 
-                                                   value="<?= date('d-m-Y'); ?>" readonly required>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Kondisi Buku Saat Dipinjam</label>
-                                            <select class="form-control" name="kondisiBukuSaatDipinjam" required>
-                                                <option selected disabled>-- Pilih Kondisi Buku --</option>
-                                                <option value="Baik">Baik</option>
-                                                <option value="Rusak">Rusak</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- /.box-body -->
-                            <div class="box-footer">
-                                <button type="submit" class="btn btn-success btn-block" id="submitBtnPinjam" disabled>
-                                    <i class="fa fa-save"></i> Simpan Peminjaman
-                                </button>
-                                <p style="text-align: center; font-size: 12px; color: #666; margin-top: 10px;">
-                                    * Scan atau isi data anggota dan buku terlebih dahulu
-                                </p>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- PENGEMBALIAN SECTION -->
-                <div id="pengembalianSection" class="transaction-section" style="display: none;">
-                    <div class="box">
-                        <div class="box-header" style="background-color: #dc3545; color: white; border-radius: 10px 10px 0 0;">
-                            <h3 class="box-title" style="font-family: 'Quicksand', sans-serif; font-weight: bold; color: white;">
-                                <i class="fa fa-undo"></i> Formulir Pengembalian Buku
-                            </h3>
-                        </div>
-
-                        <form id="pengembalianForm" onsubmit="return submitTransaksi(this, 'pengembalian')">
-                            <div class="box-body">
-                                <!-- Data Anggota Section -->
                                 <div class="row">
-                                    <div class="col-md-6">
-                                        <div style="border: 2px solid #dc3545; border-radius: 10px; padding: 15px; background-color: #fff8f8;">
-                                            <h4 style="color: #dc3545; margin-bottom: 15px;">
-                                                <i class="fa fa-user"></i> Data Anggota
-                                            </h4>
-                                            
-                                            <div class="form-group">
-                                                <label>Kode Anggota <small style="color: #dc3545;">* Scan kartu anggota</small></label>
-                                                <div class="input-group">
-                                                    <input type="text" class="form-control" id="kodeAnggotaKembali" name="kodeAnggota" 
-                                                           placeholder="Scan kartu anggota atau ketik kode" readonly>
-                                                    <span class="input-group-btn">
-                                                        <button type="button" onclick="clearAnggotaKembali()" class="btn btn-warning">
-                                                            <i class="fa fa-times"></i>
-                                                        </button>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="form-group">
-                                                <label>Nama Anggota</label>
-                                                <input type="text" class="form-control" id="namaAnggotaKembali" name="namaAnggota" 
-                                                       placeholder="Nama akan muncul otomatis" readonly required>
-                                            </div>
-                                            
-                                            <div class="form-group">
-                                                <label>Kelas</label>
-                                                <input type="text" class="form-control" id="kelasAnggotaKembali" 
-                                                       placeholder="Kelas akan muncul otomatis" readonly>
-                                            </div>
-                                            
-                                            <div id="anggotaStatusKembali" style="display: none;">
-                                                <div class="alert alert-success" style="padding: 8px; font-size: 12px;">
-                                                    <i class="fa fa-check-circle"></i> <strong>Anggota Terverifikasi!</strong>
-                                                </div>
+                                    <!-- Data Buku -->
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label>ISBN Buku</label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="isbnBuku" name="isbn" placeholder="Masukkan ISBN (contoh: 978-0-12-345678-9) atau scan barcode">
+                                                <span class="input-group-btn">
+                                                    <button type="button" class="btn btn-primary" onclick="scanBukuBarcode()">
+                                                        <i class="fa fa-qrcode"></i> Scan
+                                                    </button>
+                                                    <button type="button" class="btn btn-info" onclick="cariBukuManual()">
+                                                        <i class="fa fa-search"></i> Cari
+                                                    </button>
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
                                     
-                                    <!-- Data Buku Section -->
-                                    <div class="col-md-6">
-                                        <div style="border: 2px solid #ffc107; border-radius: 10px; padding: 15px; background-color: #fffef8;">
-                                            <h4 style="color: #ffc107; margin-bottom: 15px;">
-                                                <i class="fa fa-book"></i> Data Buku yang Dikembalikan
-                                            </h4>
-                                            
-                                            <div class="form-group">
-                                                <label>ISBN / Kode Buku <small style="color: #ffc107;">* Scan barcode buku</small></label>
-                                                <div class="input-group">
-                                                    <input type="text" class="form-control" id="isbnBukuKembali" name="isbnBuku" 
-                                                           placeholder="Scan barcode buku atau ketik ISBN" readonly>
-                                                    <span class="input-group-btn">
-                                                        <button type="button" onclick="clearBukuKembali()" class="btn btn-warning">
-                                                            <i class="fa fa-times"></i>
-                                                        </button>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="form-group">
-                                                <label>Judul Buku</label>
-                                                <input type="text" class="form-control" id="judulBukuKembali" name="judulBuku" 
-                                                       placeholder="Judul akan muncul otomatis" readonly required>
-                                            </div>
-                                            
-                                            <div class="form-group">
-                                                <label>Tanggal Peminjaman</label>
-                                                <input type="text" class="form-control" id="tanggalPeminjamanKembali" 
-                                                       placeholder="Tanggal peminjaman akan muncul otomatis" readonly>
-                                            </div>
-                                            
-                                            <div class="form-group">
-                                                <label>Status Keterlambatan</label>
-                                                <input type="text" class="form-control" id="statusKeterlambatan" 
-                                                       placeholder="Status akan muncul otomatis" readonly>
-                                            </div>
-                                            
-                                            <div id="bukuStatusKembali" style="display: none;">
-                                                <div class="alert alert-success" style="padding: 8px; font-size: 12px;">
-                                                    <i class="fa fa-check-circle"></i> <strong>Buku Ditemukan!</strong>
-                                                </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Judul Buku</label>
+                                            <input type="text" class="form-control" name="judulBuku" id="judulBuku" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Info Buku -->
+                                <div class="row" id="infoBukuRow" style="display: none;">
+                                    <div class="col-md-12">
+                                        <div class="alert alert-success">
+                                            <h5><strong>Informasi Buku:</strong></h5>
+                                            <div class="row">
+                                                <div class="col-md-3"><strong>Kategori:</strong> <span id="displayKategori"></span></div>
+                                                <div class="col-md-3"><strong>Pengarang:</strong> <span id="displayPengarang"></span></div>
+                                                <div class="col-md-3"><strong>Penerbit:</strong> <span id="displayPenerbit"></span></div>
+                                                <div class="col-md-3"><strong>Stok Tersedia:</strong> <span id="displayStok"></span> buah</div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                                 
-                                <!-- Form Details -->
-                                <div class="row" style="margin-top: 20px;">
+                                <div class="row">
                                     <div class="col-md-4">
                                         <div class="form-group">
-                                            <label>Tanggal Pengembalian</label>
-                                            <input type="text" class="form-control" name="tanggalPengembalian" 
-                                                   value="<?= date('d-m-Y'); ?>" readonly required>
+                                            <label>Tanggal Pinjam</label>
+                                            <div class="input-group date">
+                                                <input type="date" class="form-control" name="tanggalPinjam" id="tanggalPinjam" value="<?= date('Y-m-d') ?>" required>
+                                                <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                                            </div>
                                         </div>
                                     </div>
+                                    
                                     <div class="col-md-4">
                                         <div class="form-group">
-                                            <label>Kondisi Buku Saat Dikembalikan</label>
-                                            <select class="form-control" name="kondisiBukuSaatDikembalikan" required>
-                                                <option selected disabled>-- Pilih Kondisi Buku --</option>
-                                                <option value="Baik">Baik</option>
-                                                <option value="Rusak">Rusak</option>
-                                                <option value="Hilang">Hilang</option>
+                                            <label>Tanggal Kembali</label>
+                                            <div class="input-group date">
+                                                <input type="date" class="form-control" name="tanggalKembali" id="tanggalKembali" required>
+                                                <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Kondisi Buku</label>
+                                            <select class="form-control" name="kondisiBuku" id="kondisiBuku" required>
+                                                <option value="">-- Pilih Kondisi --</option>
+                                                <option value="baik">Baik</option>
+                                                <option value="rusak">Rusak</option>
                                             </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <label>Denda</label>
-                                            <input type="text" class="form-control" id="dendaPreview" 
-                                                   placeholder="Denda akan dihitung otomatis" readonly>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <!-- /.box-body -->
+                            
                             <div class="box-footer">
-                                <button type="submit" class="btn btn-danger btn-block" id="submitBtnKembali" disabled>
-                                    <i class="fa fa-undo"></i> Proses Pengembalian
-                                </button>
-                                <p style="text-align: center; font-size: 12px; color: #666; margin-top: 10px;">
-                                    * Scan atau isi data anggota dan buku terlebih dahulu
-                                </p>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <button type="submit" class="btn btn-primary btn-block" id="btnSubmit" disabled>
+                                            <i class="fa fa-save"></i> Simpan Peminjaman
+                                        </button>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <button type="button" class="btn btn-warning btn-block" onclick="resetForm()">
+                                            <i class="fa fa-refresh"></i> Reset Form
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
-            <!-- /.col -->
+        </section>
+    </div>
+
+    <!-- Modal Scan Anggota -->
+    <div class="modal fade" id="modalScanAnggota">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title"><i class="fa fa-qrcode"></i> Scan Barcode Anggota</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div id="reader-anggota" style="width: 100%; height: 300px; border: 2px dashed #ccc;"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="alert alert-info">
+                                <h5><i class="fa fa-info-circle"></i> Petunjuk:</h5>
+                                <p>1. Posisikan barcode anggota di depan kamera</p>
+                                <p>2. Pastikan barcode terlihat jelas dan tidak terpotong</p>
+                                <p>3. Tunggu hingga barcode terbaca otomatis</p>
+                            </div>
+                            
+                            <div id="scanStatusAnggota" class="alert" style="display: none;">
+                                <span id="scanMessageAnggota"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
+                </div>
+            </div>
         </div>
-        <!-- /.row -->
-    </section>
-    <!-- /.content -->
-</div>
+    </div>
 
-<!-- Include Required Libraries -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <!-- Modal Scan Buku -->
+    <div class="modal fade" id="modalScanBuku">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title"><i class="fa fa-qrcode"></i> Scan Barcode Buku</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div id="reader-buku" style="width: 100%; height: 300px; border: 2px dashed #ccc;"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="alert alert-info">
+                                <h5><i class="fa fa-info-circle"></i> Petunjuk:</h5>
+                                <p>1. Posisikan barcode ISBN buku di depan kamera</p>
+                                <p>2. Pastikan barcode terlihat jelas dan tidak terpotong</p>
+                                <p>3. Tunggu hingga barcode terbaca otomatis</p>
+                            </div>
+                            
+                            <div id="scanStatusBuku" class="alert" style="display: none;">
+                                <span id="scanMessageBuku"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<!-- Include Custom Transaction JavaScript -->
-<script src="../function/transaksi.js"></script>
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.4/html5-qrcode.min.js"></script>
+    <script src="../../assets/bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="../../assets/dist/js/sweetalert.min.js"></script>
 
-<style>
-/* Custom Alert Styles */
-.alert {
-    padding: 15px;
-    margin-bottom: 20px;
-    border: 1px solid transparent;
-    border-radius: 4px;
-}
+    <script>
+    let html5QrCodeAnggota;
+    let html5QrCodeBuku;
+    let selectedAnggota = null;
+    let selectedBuku = null;
 
-.alert-success {
-    color: #3c763d;
-    background-color: #dff0d8;
-    border-color: #d6e9c6;
-}
+    // Set tanggal kembali otomatis (7 hari dari tanggal pinjam)
+    document.getElementById('tanggalPinjam').addEventListener('change', function() {
+        const tanggalPinjam = new Date(this.value);
+        const tanggalKembali = new Date(tanggalPinjam);
+        tanggalKembali.setDate(tanggalKembali.getDate() + 7);
+        
+        const year = tanggalKembali.getFullYear();
+        const month = String(tanggalKembali.getMonth() + 1).padStart(2, '0');
+        const day = String(tanggalKembali.getDate()).padStart(2, '0');
+        
+        document.getElementById('tanggalKembali').value = `${year}-${month}-${day}`;
+    });
 
-.alert-danger {
-    color: #a94442;
-    background-color: #f2dede;
-    border-color: #ebccd1;
-}
+    // Trigger tanggal kembali saat halaman load
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('tanggalPinjam').dispatchEvent(new Event('change'));
+    });
 
-.alert-warning {
-    color: #8a6d3b;
-    background-color: #fcf8e3;
-    border-color: #faebcc;
-}
-
-.alert-info {
-    color: #31708f;
-    background-color: #d9edf7;
-    border-color: #bce8f1;
-}
-
-/* Scanner Styles */
-#scanner canvas {
-    width: 100% !important;
-    height: auto !important;
-    border: 2px solid #007bb6;
-    border-radius: 5px;
-}
-
-/* Form Animation */
-.transaction-section {
-    animation: fadeIn 0.3s ease-in-out;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* Button Hover Effects */
-.btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    transition: all 0.2s ease;
-}
-
-/* Loading Spinner */
-.spinner {
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #3498db;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    animation: spin 2s linear infinite;
-    margin: 0 auto 15px;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .btn-group-lg .btn {
-        padding: 10px 20px;
-        font-size: 14px;
+    // Format ISBN dengan tanda hubung
+    function formatISBN(isbn) {
+        // Remove all non-numeric characters
+        const numbers = isbn.replace(/\D/g, '');
+        
+        // Format as ISBN-13 (978-x-xxx-xxxxx-x)
+        if (numbers.length === 13) {
+            return numbers.replace(/(\d{3})(\d{1})(\d{3})(\d{5})(\d{1})/, '$1-$2-$3-$4-$5');
+        }
+        // Format as ISBN-10 (x-xxx-xxxxx-x)
+        else if (numbers.length === 10) {
+            return numbers.replace(/(\d{1})(\d{3})(\d{5})(\d{1})/, '$1-$2-$3-$4');
+        }
+        
+        return isbn; // Return original if not standard length
     }
-    
-    #scanner {
-        max-width: 300px;
+
+    // Fungsi Scan Anggota
+    function scanAnggotaBarcode() {
+        $('#modalScanAnggota').modal('show');
+        
+        setTimeout(() => {
+            html5QrCodeAnggota = new Html5Qrcode("reader-anggota");
+            
+            Html5Qrcode.getCameras().then(devices => {
+                if (devices && devices.length) {
+                    const cameraId = devices[0].id;
+                    
+                    html5QrCodeAnggota.start(
+                        cameraId,
+                        {
+                            fps: 10,
+                            qrbox: { width: 250, height: 250 }
+                        },
+                        (decodedText, decodedResult) => {
+                            showScanStatus('anggota', 'success', 'Barcode berhasil terbaca, mencari data anggota...');
+                            cariAnggota(decodedText);
+                            html5QrCodeAnggota.stop();
+                            setTimeout(() => {
+                                $('#modalScanAnggota').modal('hide');
+                            }, 1500);
+                        },
+                        (errorMessage) => {
+                            // Silent error, just keep scanning
+                        }
+                    ).catch(err => {
+                        showScanStatus('anggota', 'error', 'Tidak dapat mengakses kamera: ' + err);
+                    });
+                } else {
+                    showScanStatus('anggota', 'error', 'Kamera tidak ditemukan');
+                }
+            }).catch(err => {
+                showScanStatus('anggota', 'error', 'Error mengakses kamera: ' + err);
+            });
+        }, 500);
     }
-    
-    .box-body {
-        padding: 10px;
+
+    // Fungsi Scan Buku
+    function scanBukuBarcode() {
+        $('#modalScanBuku').modal('show');
+        
+        setTimeout(() => {
+            html5QrCodeBuku = new Html5Qrcode("reader-buku");
+            
+            Html5Qrcode.getCameras().then(devices => {
+                if (devices && devices.length) {
+                    const cameraId = devices[0].id;
+                    
+                    html5QrCodeBuku.start(
+                        cameraId,
+                        {
+                            fps: 10,
+                            qrbox: { width: 250, height: 250 }
+                        },
+                        (decodedText, decodedResult) => {
+                            showScanStatus('buku', 'success', 'Barcode berhasil terbaca, mencari data buku...');
+                            const formattedISBN = formatISBN(decodedText);
+                            $('#isbnBuku').val(formattedISBN);
+                            cariBuku(formattedISBN);
+                            html5QrCodeBuku.stop();
+                            setTimeout(() => {
+                                $('#modalScanBuku').modal('hide');
+                            }, 1500);
+                        },
+                        (errorMessage) => {
+                            // Silent error, just keep scanning
+                        }
+                    ).catch(err => {
+                        showScanStatus('buku', 'error', 'Tidak dapat mengakses kamera: ' + err);
+                    });
+                } else {
+                    showScanStatus('buku', 'error', 'Kamera tidak ditemukan');
+                }
+            }).catch(err => {
+                showScanStatus('buku', 'error', 'Error mengakses kamera: ' + err);
+            });
+        }, 500);
     }
-}
-</style>
+
+    // Show scan status
+    function showScanStatus(type, status, message) {
+        const statusDiv = $('#scanStatus' + (type === 'anggota' ? 'Anggota' : 'Buku'));
+        const messageSpan = $('#scanMessage' + (type === 'anggota' ? 'Anggota' : 'Buku'));
+        
+        statusDiv.removeClass('alert-success alert-danger alert-warning');
+        
+        if (status === 'success') {
+            statusDiv.addClass('alert-success');
+        } else if (status === 'error') {
+            statusDiv.addClass('alert-danger');
+        } else {
+            statusDiv.addClass('alert-warning');
+        }
+        
+        messageSpan.text(message);
+        statusDiv.show();
+    }
+
+    // Cari Anggota berdasarkan kode (manual atau scan)
+    function cariAnggotaManual() {
+        const kodeAnggota = $('#kodeAnggota').val().trim();
+        if (kodeAnggota === '') {
+            swal({
+                icon: 'warning',
+                title: 'Peringatan',
+                text: 'Mohon masukkan kode anggota'
+            });
+            return;
+        }
+        cariAnggota(kodeAnggota);
+    }
+
+    function cariAnggota(kodeAnggota) {
+        // Set kode ke input field
+        $('#kodeAnggota').val(kodeAnggota);
+        
+        $.ajax({
+            url: 'pages/function/Peminjaman.php',
+            type: 'POST',
+            data: {
+                aksi: 'cari_anggota',
+                kode_anggota: kodeAnggota
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    selectedAnggota = response.data;
+                    
+                    // Fill form fields
+                    $('#namaAnggota').val(response.data.fullname);
+                    $('#idAnggota').val(response.data.id_user);
+                    
+                    // Show info anggota
+                    $('#displayNIS').text(response.data.nis);
+                    $('#displayKelas').text(response.data.kelas);
+                    $('#displayAlamat').text(response.data.alamat);
+                    $('#displayJumlahPinjam').text(response.jumlah_pinjam);
+                    $('#infoAnggotaRow').show();
+                    
+                    checkFormValidation();
+                    
+                    swal({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: 'Data anggota ditemukan',
+                        timer: 2000
+                    });
+                    
+                } else {
+                    // Clear anggota data
+                    clearAnggotaData();
+                    
+                    swal({
+                        icon: 'error',
+                        title: 'Anggota Tidak Ditemukan',
+                        text: response.message
+                    });
+                }
+            },
+            error: function() {
+                swal({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Terjadi kesalahan saat mencari anggota'
+                });
+            }
+        });
+    }
+
+    // Cari Buku berdasarkan ISBN (manual atau scan)
+    function cariBukuManual() {
+        let isbn = $('#isbnBuku').val().trim();
+        if (isbn === '') {
+            swal({
+                icon: 'warning',
+                title: 'Peringatan',
+                text: 'Mohon masukkan ISBN buku'
+            });
+            return;
+        }
+        
+        // Format ISBN if it's just numbers
+        if (/^\d+$/.test(isbn)) {
+            isbn = formatISBN(isbn);
+            $('#isbnBuku').val(isbn);
+        }
+        
+        cariBuku(isbn);
+    }
+
+    function cariBuku(isbn) {
+        $.ajax({
+            url: 'pages/function/Peminjaman.php',
+            type: 'POST',
+            data: {
+                aksi: 'cari_buku',
+                isbn: isbn
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    selectedBuku = response.data;
+                    
+                    // Fill form fields
+                    $('#judulBuku').val(response.data.judul_buku);
+                    
+                    // Show info buku
+                    $('#displayKategori').text(response.data.kategori_buku);
+                    $('#displayPengarang').text(response.data.pengarang);
+                    $('#displayPenerbit').text(response.data.penerbit_buku);
+                    $('#displayStok').text(response.data.j_buku_baik);
+                    $('#infoBukuRow').show();
+                    
+                    checkFormValidation();
+                    
+                    swal({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: 'Data buku ditemukan',
+                        timer: 2000
+                    });
+                    
+                } else {
+                    // Clear buku data
+                    clearBukuData();
+                    
+                    swal({
+                        icon: 'error',
+                        title: 'Buku Tidak Ditemukan',
+                        text: response.message
+                    });
+                }
+            },
+            error: function() {
+                swal({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Terjadi kesalahan saat mencari buku'
+                });
+            }
+        });
+    }
+
+    // Clear data functions
+    function clearAnggotaData() {
+        selectedAnggota = null;
+        $('#namaAnggota').val('');
+        $('#idAnggota').val('');
+        $('#infoAnggotaRow').hide();
+        checkFormValidation();
+    }
+
+    function clearBukuData() {
+        selectedBuku = null;
+        $('#judulBuku').val('');
+        $('#infoBukuRow').hide();
+        checkFormValidation();
+    }
+
+    // Check form validation
+    function checkFormValidation() {
+        const namaAnggota = $('#namaAnggota').val();
+        const judulBuku = $('#judulBuku').val();
+        const tanggalPinjam = $('#tanggalPinjam').val();
+        const tanggalKembali = $('#tanggalKembali').val();
+        const kondisiBuku = $('#kondisiBuku').val();
+        
+        if (namaAnggota && judulBuku && tanggalPinjam && tanggalKembali && kondisiBuku) {
+            $('#btnSubmit').prop('disabled', false);
+        } else {
+            $('#btnSubmit').prop('disabled', true);
+        }
+    }
+
+    // Reset Form
+    function resetForm() {
+        document.getElementById('formPeminjaman').reset();
+        clearAnggotaData();
+        clearBukuData();
+        $('#kodeAnggota').val('');
+        $('#isbnBuku').val('');
+        $('#btnSubmit').prop('disabled', true);
+        
+        // Reset tanggal
+        document.getElementById('tanggalPinjam').dispatchEvent(new Event('change'));
+        
+        swal({
+            icon: 'success',
+            title: 'Form Direset',
+            text: 'Form berhasil direset',
+            timer: 2000
+        });
+    }
+
+    // Stop cameras when modals are closed
+    $('#modalScanAnggota').on('hidden.bs.modal', function () {
+        if (html5QrCodeAnggota) {
+            html5QrCodeAnggota.stop().then(() => {
+                html5QrCodeAnggota.clear();
+            }).catch(err => {
+                console.error(err);
+            });
+        }
+        $('#scanStatusAnggota').hide();
+    });
+
+    $('#modalScanBuku').on('hidden.bs.modal', function () {
+        if (html5QrCodeBuku) {
+            html5QrCodeBuku.stop().then(() => {
+                html5QrCodeBuku.clear();
+            }).catch(err => {
+                console.error(err);
+            });
+        }
+        $('#scanStatusBuku').hide();
+    });
+
+    // Event listeners for manual input
+    $('#kodeAnggota').on('keypress', function(e) {
+        if (e.which === 13) { // Enter key
+            cariAnggotaManual();
+        }
+    });
+
+    $('#isbnBuku').on('keypress', function(e) {
+        if (e.which === 13) { // Enter key
+            cariBukuManual();
+        }
+    });
+
+    // Auto format ISBN while typing
+    $('#isbnBuku').on('input', function() {
+        let value = $(this).val();
+        // Only format if it looks like a number string
+        if (/^\d+$/.test(value) && (value.length === 10 || value.length === 13)) {
+            $(this).val(formatISBN(value));
+        }
+    });
+
+    // Form validation on field change
+    $('#namaAnggota, #judulBuku, #tanggalPinjam, #tanggalKembali, #kondisiBuku').on('change input', function() {
+        checkFormValidation();
+    });
+
+    // Form submission validation
+    $('#formPeminjaman').on('submit', function(e) {
+        if (!selectedAnggota || !selectedBuku) {
+            e.preventDefault();
+            swal({
+                icon: 'error',
+                title: 'Data Tidak Lengkap',
+                text: 'Pastikan data anggota dan buku sudah dipilih'
+            });
+            return false;
+        }
+    });
+    </script>

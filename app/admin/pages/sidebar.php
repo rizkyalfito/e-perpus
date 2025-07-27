@@ -57,6 +57,7 @@
                 <ul class="treeview-menu">
                     <li><a href="data-peminjaman"><i class="fa fa-circle-o"></i> Data Peminjaman</a></li>
                     <li><a href="tambah-peminjaman"><i class="fa fa-circle-o"></i> Tambah Peminjaman</a></li>
+                    <li><a href="tambah-pengembalian"><i class="fa fa-circle-o"></i> Tambah Pengembalian</a></li>
                 </ul>
             </li>
             <li><a href="laporan"><i class="fa fa-book"></i> <span>Denda</span></a></li>

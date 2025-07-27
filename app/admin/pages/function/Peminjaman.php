@@ -1,342 +1,344 @@
 <?php
-// Peminjaman.php
 session_start();
-include "../../../config/koneksi.php";
+include "../../../../config/koneksi.php";
 
-header('Content-Type: application/json');
-
-class TransaksiController {
-    private $koneksi;
+// Handle AJAX requests untuk mencari anggota dan buku
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
-    public function __construct($connection) {
-        $this->koneksi = $connection;
-    }
-    
-    // Get anggota data by kode_user (barcode scan)
-    public function getAnggotaByKode($kode_user) {
-        try {
-            $query = "SELECT * FROM user WHERE kode_user = ? AND role = 'Anggota' AND verif = 'Tidak'";
-            $stmt = mysqli_prepare($this->koneksi, $query);
-            mysqli_stmt_bind_param($stmt, "s", $kode_user);
-            mysqli_stmt_execute($stmt);
-            $result = mysqli_stmt_get_result($stmt);
-            
-            if ($row = mysqli_fetch_assoc($result)) {
-                return [
-                    'status' => 'success',
-                    'data' => [
-                        'kode_user' => $row['kode_user'],
-                        'nama' => $row['fullname'],
-                        'kelas' => $row['kelas'],
-                        'nis' => $row['nis']
-                    ]
-                ];
-            } else {
-                return [
-                    'status' => 'error',
-                    'message' => 'Anggota tidak ditemukan atau belum diverifikasi'
-                ];
-            }
-        } catch (Exception $e) {
-            return [
-                'status' => 'error',
-                'message' => 'Database error: ' . $e->getMessage()
-            ];
-        }
-    }
-    
-    // Get buku data by ISBN (barcode scan)
-    public function getBukuByISBN($isbn) {
-        try {
-            $query = "SELECT * FROM buku WHERE isbn = ?";
-            $stmt = mysqli_prepare($this->koneksi, $query);
-            mysqli_stmt_bind_param($stmt, "s", $isbn);
-            mysqli_stmt_execute($stmt);
-            $result = mysqli_stmt_get_result($stmt);
-            
-            if ($row = mysqli_fetch_assoc($result)) {
-                $stok_tersedia = (int)$row['j_buku_baik'];
-                
-                return [
-                    'status' => 'success',
-                    'data' => [
-                        'isbn' => $row['isbn'],
-                        'judul' => $row['judul_buku'],
-                        'pengarang' => $row['pengarang'],
-                        'penerbit' => $row['penerbit_buku'],
-                        'kategori' => $row['kategori_buku'],
-                        'stok_baik' => $row['j_buku_baik'],
-                        'stok_rusak' => $row['j_buku_rusak'],
-                        'stok_tersedia' => $stok_tersedia . ' buku tersedia',
-                        'available' => $stok_tersedia > 0
-                    ]
-                ];
-            } else {
-                return [
-                    'status' => 'error',
-                    'message' => 'Buku dengan ISBN ' . $isbn . ' tidak ditemukan'
-                ];
-            }
-        } catch (Exception $e) {
-            return [
-                'status' => 'error',
-                'message' => 'Database error: ' . $e->getMessage()
-            ];
-        }
-    }
-    
-    // Check existing loan for return process
-    public function checkPeminjaman($kode_anggota, $isbn) {
-        try {
-            $query = "SELECT p.*, u.fullname, b.judul_buku 
-                     FROM peminjaman p 
-                     JOIN user u ON p.nama_anggota = u.fullname 
-                     JOIN buku b ON p.judul_buku = b.judul_buku 
-                     WHERE u.kode_user = ? AND b.isbn = ? AND p.tanggal_pengembalian = ''";
-            
-            $stmt = mysqli_prepare($this->koneksi, $query);
-            mysqli_stmt_bind_param($stmt, "ss", $kode_anggota, $isbn);
-            mysqli_stmt_execute($stmt);
-            $result = mysqli_stmt_get_result($stmt);
-            
-            if ($row = mysqli_fetch_assoc($result)) {
-                // Calculate overdue status
-                $tanggal_peminjaman = DateTime::createFromFormat('d-m-Y', $row['tanggal_peminjaman']);
-                $batas_kembali = clone $tanggal_peminjaman;
-                $batas_kembali->add(new DateInterval('P14D')); // 14 days loan period
-                $today = new DateTime();
-                
-                $is_overdue = $today > $batas_kembali;
-                $days_overdue = $is_overdue ? $today->diff($batas_kembali)->days : 0;
-                
-                return [
-                    'status' => 'success',
-                    'data' => [
-                        'id_peminjaman' => $row['id_peminjaman'],
-                        'tanggal_peminjaman' => $row['tanggal_peminjaman'],
-                        'batas_kembali' => $batas_kembali->format('d-m-Y'),
-                        'is_overdue' => $is_overdue,
-                        'days_overdue' => $days_overdue,
-                        'status' => $is_overdue ? 'Terlambat ' . $days_overdue . ' hari' : 'Belum Terlambat',
-                        'kondisi_awal' => $row['kondisi_buku_saat_dipinjam']
-                    ]
-                ];
-            } else {
-                return [
-                    'status' => 'error',
-                    'message' => 'Tidak ada peminjaman aktif untuk kombinasi anggota dan buku ini'
-                ];
-            }
-        } catch (Exception $e) {
-            return [
-                'status' => 'error',
-                'message' => 'Database error: ' . $e->getMessage()
-            ];
-        }
-    }
-    
-    // Calculate denda based on conditions
-    public function calculateDenda($kondisi_kembali, $days_overdue = 0) {
-        $denda = 0;
+    // Cari Anggota berdasarkan kode
+    if (isset($_POST['aksi']) && $_POST['aksi'] === 'cari_anggota') {
+        $kode_anggota = mysqli_real_escape_string($koneksi, $_POST['kode_anggota']);
         
-        // Denda keterlambatan: Rp 1000 per hari
-        if ($days_overdue > 0) {
-            $denda += $days_overdue * 1000;
-        }
+        $query = mysqli_query($koneksi, "SELECT * FROM user WHERE kode_user = '$kode_anggota' AND role = 'Anggota'");
         
-        // Denda kondisi buku
-        switch ($kondisi_kembali) {
-            case 'Rusak':
-                $denda += 20000;
-                break;
-            case 'Hilang':
-                $denda += 50000;
-                break;
+        if (mysqli_num_rows($query) > 0) {
+            $data = mysqli_fetch_assoc($query);
+            
+            // Cek apakah anggota memiliki peminjaman yang belum dikembalikan
+            $cek_pinjam = mysqli_query($koneksi, "SELECT COUNT(*) as jumlah FROM peminjaman WHERE nama_anggota = '".$data['fullname']."' AND kondisi_buku_saat_dikembalikan = ''");
+            $pinjam_data = mysqli_fetch_assoc($cek_pinjam);
+            
+            if ($pinjam_data['jumlah'] >= 3) { // Maksimal 3 buku
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Anggota sudah meminjam maksimal 3 buku. Mohon kembalikan buku terlebih dahulu.'
+                ]);
+            } else {
+                echo json_encode([
+                    'status' => 'success',
+                    'data' => $data,
+                    'jumlah_pinjam' => $pinjam_data['jumlah'],
+                    'message' => 'Anggota ditemukan'
+                ]);
+            }
+        } else {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Anggota dengan kode tersebut tidak ditemukan'
+            ]);
         }
-        
-        return [
-            'total' => $denda,
-            'formatted' => $denda > 0 ? 'Rp ' . number_format($denda, 0, ',', '.') : 'Tidak ada denda'
-        ];
+        exit;
     }
     
-    // Process peminjaman
-    public function processPeminjaman($data) {
-        try {
-            // Validate anggota
-            $anggota = $this->getAnggotaByKode($data['kodeAnggota']);
-            if ($anggota['status'] !== 'success') {
-                return $anggota;
-            }
+    // Cari Buku berdasarkan ISBN
+    if (isset($_POST['aksi']) && $_POST['aksi'] === 'cari_buku') {
+        $isbn_input = mysqli_real_escape_string($koneksi, $_POST['isbn']);
+        
+        // Convert ISBN input to integer for database search (remove hyphens)
+        $isbn_number = str_replace('-', '', $isbn_input);
+        
+        $query = mysqli_query($koneksi, "SELECT * FROM buku WHERE isbn = '$isbn_number'");
+        
+        if (mysqli_num_rows($query) > 0) {
+            $data = mysqli_fetch_assoc($query);
             
-            // Validate buku
-            $buku = $this->getBukuByISBN($data['isbnBuku']);
-            if ($buku['status'] !== 'success') {
-                return $buku;
-            }
-            
-            if (!$buku['data']['available']) {
-                return [
+            if ($data['j_buku_baik'] <= 0) {
+                echo json_encode([
                     'status' => 'error',
-                    'message' => 'Stok buku tidak tersedia'
-                ];
-            }
-            
-            // Insert peminjaman
-            $query = "INSERT INTO peminjaman (nama_anggota, judul_buku, tanggal_peminjaman, tanggal_pengembalian, kondisi_buku_saat_dipinjam, kondisi_buku_saat_dikembalikan, denda) 
-                     VALUES (?, ?, ?, '', ?, '', '')";
-            
-            $stmt = mysqli_prepare($this->koneksi, $query);
-            mysqli_stmt_bind_param($stmt, "ssss", 
-                $anggota['data']['nama'],
-                $buku['data']['judul'],
-                $data['tanggalPeminjaman'],
-                $data['kondisiBukuSaatDipinjam']
-            );
-            
-            if (mysqli_stmt_execute($stmt)) {
-                // Update stok buku
-                $new_stok = (int)$buku['data']['stok_baik'] - 1;
-                $update_query = "UPDATE buku SET j_buku_baik = ? WHERE isbn = ?";
-                $update_stmt = mysqli_prepare($this->koneksi, $update_query);
-                mysqli_stmt_bind_param($update_stmt, "is", $new_stok, $data['isbnBuku']);
-                mysqli_stmt_execute($update_stmt);
-                
-                return [
-                    'status' => 'success',
-                    'message' => 'Peminjaman berhasil disimpan'
-                ];
+                    'message' => 'Buku tidak tersedia (stok habis)'
+                ]);
             } else {
-                return [
-                    'status' => 'error',
-                    'message' => 'Gagal menyimpan peminjaman'
-                ];
-            }
-        } catch (Exception $e) {
-            return [
-                'status' => 'error',
-                'message' => 'Database error: ' . $e->getMessage()
-            ];
-        }
-    }
-    
-    // Process pengembalian
-    public function processPengembalian($data) {
-        try {
-            // Check existing loan
-            $loan = $this->checkPeminjaman($data['kodeAnggota'], $data['isbnBuku']);
-            if ($loan['status'] !== 'success') {
-                return $loan;
-            }
-            
-            // Calculate denda
-            $denda = $this->calculateDenda($data['kondisiBukuSaatDikembalikan'], $loan['data']['days_overdue']);
-            
-            // Update peminjaman record
-            $query = "UPDATE peminjaman SET 
-                     tanggal_pengembalian = ?, 
-                     kondisi_buku_saat_dikembalikan = ?, 
-                     denda = ? 
-                     WHERE id_peminjaman = ?";
-            
-            $stmt = mysqli_prepare($this->koneksi, $query);
-            mysqli_stmt_bind_param($stmt, "sssi", 
-                $data['tanggalPengembalian'],
-                $data['kondisiBukuSaatDikembalikan'],
-                $denda['formatted'],
-                $loan['data']['id_peminjaman']
-            );
-            
-            if (mysqli_stmt_execute($stmt)) {
-                // Update stok buku
-                $buku = $this->getBukuByISBN($data['isbnBuku']);
-                if ($data['kondisiBukuSaatDikembalikan'] === 'Baik') {
-                    $new_stok_baik = (int)$buku['data']['stok_baik'] + 1;
-                    $update_query = "UPDATE buku SET j_buku_baik = ? WHERE isbn = ?";
-                    $update_stmt = mysqli_prepare($this->koneksi, $update_query);
-                    mysqli_stmt_bind_param($update_stmt, "is", $new_stok_baik, $data['isbnBuku']);
-                } else {
-                    $new_stok_rusak = (int)$buku['data']['stok_rusak'] + 1;
-                    $update_query = "UPDATE buku SET j_buku_rusak = ? WHERE isbn = ?";
-                    $update_stmt = mysqli_prepare($this->koneksi, $update_query);
-                    mysqli_stmt_bind_param($update_stmt, "is", $new_stok_rusak, $data['isbnBuku']);
-                }
-                mysqli_stmt_execute($update_stmt);
+                // Format ISBN for display (add hyphens)
+                $data['isbn_display'] = $isbn_input;
                 
-                return [
+                echo json_encode([
                     'status' => 'success',
-                    'message' => 'Pengembalian berhasil diproses',
-                    'denda' => $denda
-                ];
-            } else {
-                return [
-                    'status' => 'error',
-                    'message' => 'Gagal memproses pengembalian'
-                ];
+                    'data' => $data,
+                    'message' => 'Buku ditemukan'
+                ]);
             }
-        } catch (Exception $e) {
-            return [
+        } else {
+            echo json_encode([
                 'status' => 'error',
-                'message' => 'Database error: ' . $e->getMessage()
-            ];
+                'message' => 'Buku dengan ISBN tersebut tidak ditemukan'
+            ]);
         }
+        exit;
     }
 }
 
-// Handle AJAX requests
-if (isset($_GET['action'])) {
-    $controller = new TransaksiController($koneksi);
+// Handle form submissions
+if (isset($_GET['aksi'])) {
     
-    switch ($_GET['action']) {
-        case 'getAnggota':
-            if (isset($_GET['kode'])) {
-                echo json_encode($controller->getAnggotaByKode($_GET['kode']));
-            }
-            break;
+    if ($_GET['aksi'] == "tambah") {
+        $nama_anggota = mysqli_real_escape_string($koneksi, $_POST['namaAnggota']);
+        $judul_buku = mysqli_real_escape_string($koneksi, $_POST['judulBuku']);
+        $tanggal_pinjam = $_POST['tanggalPinjam'];
+        $tanggal_kembali = $_POST['tanggalKembali'];
+        $kondisi_buku = mysqli_real_escape_string($koneksi, $_POST['kondisiBuku']);
+        $isbn = str_replace('-', '', $_POST['isbn']); // Remove hyphens for database
+        
+        // Validasi input
+        if (empty($nama_anggota) || empty($judul_buku) || empty($isbn)) {
+            $_SESSION['gagal'] = "Semua field harus diisi!";
+            header("location: " . $_SERVER['HTTP_REFERER']);
+            exit;
+        }
+        
+        // Cek apakah anggota ada
+        $cek_anggota = mysqli_query($koneksi, "SELECT * FROM user WHERE fullname = '$nama_anggota' AND role = 'Anggota'");
+        if (mysqli_num_rows($cek_anggota) == 0) {
+            $_SESSION['gagal'] = "Anggota tidak ditemukan!";
+            header("location: " . $_SERVER['HTTP_REFERER']);
+            exit;
+        }
+        
+        // Cek batas peminjaman anggota
+        $cek_pinjam = mysqli_query($koneksi, "SELECT COUNT(*) as jumlah FROM peminjaman WHERE nama_anggota = '$nama_anggota' AND kondisi_buku_saat_dikembalikan = ''");
+        $pinjam_data = mysqli_fetch_assoc($cek_pinjam);
+        
+        if ($pinjam_data['jumlah'] >= 3) {
+            $_SESSION['gagal'] = "Melebihi batas maksimal peminjaman (3 buku per anggota)!";
+            header("location: " . $_SERVER['HTTP_REFERER']);
+            exit;
+        }
+        
+        // Cek stok buku
+        $cek_buku = mysqli_query($koneksi, "SELECT * FROM buku WHERE isbn = '$isbn'");
+        if (mysqli_num_rows($cek_buku) == 0) {
+            $_SESSION['gagal'] = "Buku tidak ditemukan!";
+            header("location: " . $_SERVER['HTTP_REFERER']);
+            exit;
+        }
+        
+        $data_buku = mysqli_fetch_assoc($cek_buku);
+        if ($data_buku['j_buku_baik'] <= 0) {
+            $_SESSION['gagal'] = "Stok buku tidak tersedia!";
+            header("location: " . $_SERVER['HTTP_REFERER']);
+            exit;
+        }
+        
+        // Begin transaction
+        mysqli_autocommit($koneksi, FALSE);
+        
+        try {
+            // Insert peminjaman
+            $sql_pinjam = "INSERT INTO peminjaman (nama_anggota, judul_buku, tanggal_peminjaman, tanggal_pengembalian, kondisi_buku_saat_dipinjam, kondisi_buku_saat_dikembalikan, denda) 
+                          VALUES ('$nama_anggota', '$judul_buku', '$tanggal_pinjam', '$tanggal_kembali', '$kondisi_buku', '', '0')";
             
-        case 'getBuku':
-            if (isset($_GET['isbn'])) {
-                echo json_encode($controller->getBukuByISBN($_GET['isbn']));
+            if (!mysqli_query($koneksi, $sql_pinjam)) {
+                throw new Exception("Gagal menyimpan data peminjaman");
             }
-            break;
             
-        case 'checkPeminjaman':
-            if (isset($_GET['kode']) && isset($_GET['isbn'])) {
-                $result = $controller->checkPeminjaman($_GET['kode'], $_GET['isbn']);
-                echo json_encode($result);
-            }
-            break;
+            // Update stok buku (kurangi 1)
+            $sql_update_stok = "UPDATE buku SET j_buku_baik = j_buku_baik - 1 WHERE isbn = '$isbn'";
             
-        case 'calculateDenda':
-            if (isset($_GET['kondisi']) && isset($_GET['days'])) {
-                $denda = $controller->calculateDenda($_GET['kondisi'], (int)$_GET['days']);
-                echo json_encode(['status' => 'success', 'data' => $denda]);
+            if (!mysqli_query($koneksi, $sql_update_stok)) {
+                throw new Exception("Gagal mengupdate stok buku");
             }
-            break;
             
-        case 'processPeminjaman':
-            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $data = [
-                    'kodeAnggota' => $_POST['kodeAnggota'],
-                    'isbnBuku' => $_POST['isbnBuku'],
-                    'tanggalPeminjaman' => $_POST['tanggalPeminjaman'],
-                    'kondisiBukuSaatDipinjam' => $_POST['kondisiBukuSaatDipinjam']
-                ];
-                echo json_encode($controller->processPeminjaman($data));
-            }
-            break;
+            // Commit transaction
+            mysqli_commit($koneksi);
             
-        case 'processPengembalian':
-            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $data = [
-                    'kodeAnggota' => $_POST['kodeAnggota'],
-                    'isbnBuku' => $_POST['isbnBuku'],
-                    'tanggalPengembalian' => $_POST['tanggalPengembalian'],
-                    'kondisiBukuSaatDikembalikan' => $_POST['kondisiBukuSaatDikembalikan']
-                ];
-                echo json_encode($controller->processPengembalian($data));
-            }
-            break;
+            $_SESSION['berhasil'] = "Berhasil memproses peminjaman buku!";
+            
+        } catch (Exception $e) {
+            // Rollback transaction
+            mysqli_rollback($koneksi);
+            $_SESSION['gagal'] = "Error: " . $e->getMessage();
+        }
+        
+        // Reset autocommit
+        mysqli_autocommit($koneksi, TRUE);
+        
+        header("location: " . $_SERVER['HTTP_REFERER']);
+        exit;
     }
+    
+    elseif ($_GET['aksi'] == "kembali") {
+        $id_peminjaman = $_POST['idPeminjaman'];
+        $tanggal_dikembalikan = date('Y-m-d');
+        $kondisi_buku_kembali = $_POST['kondisiBuku'];
+        $denda = isset($_POST['denda']) ? $_POST['denda'] : 0;
+        
+        // Begin transaction
+        mysqli_autocommit($koneksi, FALSE);
+        
+        try {
+            // Get data peminjaman
+            $query_pinjam = mysqli_query($koneksi, "SELECT * FROM peminjaman WHERE id_peminjaman = '$id_peminjaman'");
+            $data_pinjam = mysqli_fetch_assoc($query_pinjam);
+            
+            if (!$data_pinjam) {
+                throw new Exception("Data peminjaman tidak ditemukan");
+            }
+            
+            // Update peminjaman
+            $sql_update_pinjam = "UPDATE peminjaman SET 
+                                    kondisi_buku_saat_dikembalikan = '$kondisi_buku_kembali',
+                                    denda = '$denda'
+                                  WHERE id_peminjaman = '$id_peminjaman'";
+            
+            if (!mysqli_query($koneksi, $sql_update_pinjam)) {
+                throw new Exception("Gagal mengupdate data peminjaman");
+            }
+            
+            // Get ISBN dari judul buku untuk update stok
+            $query_buku = mysqli_query($koneksi, "SELECT isbn FROM buku WHERE judul_buku = '".$data_pinjam['judul_buku']."'");
+            $data_buku = mysqli_fetch_assoc($query_buku);
+            
+            if ($data_buku) {
+                // Update stok buku
+                if ($kondisi_buku_kembali === 'baik') {
+                    $sql_update_stok = "UPDATE buku SET j_buku_baik = j_buku_baik + 1 WHERE isbn = '".$data_buku['isbn']."'";
+                } else {
+                    $sql_update_stok = "UPDATE buku SET j_buku_rusak = j_buku_rusak + 1 WHERE isbn = '".$data_buku['isbn']."'";
+                }
+                
+                if (!mysqli_query($koneksi, $sql_update_stok)) {
+                    throw new Exception("Gagal mengupdate stok buku");
+                }
+            }
+            
+            // Commit transaction
+            mysqli_commit($koneksi);
+            
+            $_SESSION['berhasil'] = "Buku berhasil dikembalikan!";
+            
+        } catch (Exception $e) {
+            // Rollback transaction
+            mysqli_rollback($koneksi);
+            $_SESSION['gagal'] = "Error: " . $e->getMessage();
+        }
+        
+        // Reset autocommit
+        mysqli_autocommit($koneksi, TRUE);
+        
+        header("location: " . $_SERVER['HTTP_REFERER']);
+        exit;
+    }
+    
+    elseif ($_GET['aksi'] == "perpanjang") {
+        $id_peminjaman = $_POST['idPeminjaman'];
+        $tanggal_kembali_baru = $_POST['tanggalKembaliBaru'];
+        
+        $sql = "UPDATE peminjaman SET tanggal_pengembalian = '$tanggal_kembali_baru' WHERE id_peminjaman = '$id_peminjaman'";
+        
+        if (mysqli_query($koneksi, $sql)) {
+            $_SESSION['berhasil'] = "Peminjaman berhasil diperpanjang!";
+        } else {
+            $_SESSION['gagal'] = "Gagal memperpanjang peminjaman!";
+        }
+        
+        header("location: " . $_SERVER['HTTP_REFERER']);
+        exit;
+    }
+    
+    elseif ($_GET['aksi'] == "hapus") {
+        $id_peminjaman = $_GET['id'];
+        
+        // Begin transaction
+        mysqli_autocommit($koneksi, FALSE);
+        
+        try {
+            // Get data peminjaman
+            $query_pinjam = mysqli_query($koneksi, "SELECT * FROM peminjaman WHERE id_peminjaman = '$id_peminjaman'");
+            $data_pinjam = mysqli_fetch_assoc($query_pinjam);
+            
+            if (!$data_pinjam) {
+                throw new Exception("Data peminjaman tidak ditemukan");
+            }
+            
+            // Jika belum dikembalikan, kembalikan stok
+            if (empty($data_pinjam['kondisi_buku_saat_dikembalikan'])) {
+                $query_buku = mysqli_query($koneksi, "SELECT isbn FROM buku WHERE judul_buku = '".$data_pinjam['judul_buku']."'");
+                $data_buku = mysqli_fetch_assoc($query_buku);
+                
+                if ($data_buku) {
+                    $sql_update_stok = "UPDATE buku SET j_buku_baik = j_buku_baik + 1 WHERE isbn = '".$data_buku['isbn']."'";
+                    if (!mysqli_query($koneksi, $sql_update_stok)) {
+                        throw new Exception("Gagal mengembalikan stok buku");
+                    }
+                }
+            }
+            
+            // Delete peminjaman
+            $sql_delete = "DELETE FROM peminjaman WHERE id_peminjaman = '$id_peminjaman'";
+            if (!mysqli_query($koneksi, $sql_delete)) {
+                throw new Exception("Gagal menghapus data peminjaman");
+            }
+            
+            // Commit transaction
+            mysqli_commit($koneksi);
+            
+            $_SESSION['berhasil'] = "Data peminjaman berhasil dihapus!";
+            
+        } catch (Exception $e) {
+            // Rollback transaction
+            mysqli_rollback($koneksi);
+            $_SESSION['gagal'] = "Error: " . $e->getMessage();
+        }
+        
+        // Reset autocommit
+        mysqli_autocommit($koneksi, TRUE);
+        
+        header("location: " . $_SERVER['HTTP_REFERER']);
+        exit;
+    }
+}
+
+// Function untuk hitung denda
+function hitungDenda($tanggal_kembali, $tanggal_dikembalikan = null) {
+    $tanggal_dikembalikan = $tanggal_dikembalikan ?: date('Y-m-d');
+    
+    $date1 = new DateTime($tanggal_kembali);
+    $date2 = new DateTime($tanggal_dikembalikan);
+    
+    if ($date2 > $date1) {
+        $diff = $date2->diff($date1);
+        $hari_terlambat = $diff->days;
+        $denda_per_hari = 1000; // Rp 1.000 per hari
+        return $hari_terlambat * $denda_per_hari;
+    }
+    
+    return 0;
+}
+
+// Function untuk get data peminjaman (untuk API atau AJAX)
+if (isset($_GET['get_data']) && $_GET['get_data'] === 'peminjaman') {
+    // Query dengan JOIN untuk mendapatkan kode anggota
+    $query = "SELECT p.*, u.kode_user as kode_anggota 
+              FROM peminjaman p 
+              LEFT JOIN user u ON p.nama_anggota = u.fullname 
+              WHERE u.role = 'Anggota' 
+              ORDER BY p.tanggal_peminjaman DESC";
+    
+    $result = mysqli_query($koneksi, $query);
+    $data = [];
+    
+    while ($row = mysqli_fetch_assoc($result)) {
+        // Hitung denda jika belum dikembalikan
+        if (empty($row['kondisi_buku_saat_dikembalikan'])) {
+            $row['denda_calculated'] = hitungDenda($row['tanggal_pengembalian']);
+        } else {
+            $row['denda_calculated'] = $row['denda'];
+        }
+        
+        $data[] = $row;
+    }
+    
+    header('Content-Type: application/json');
+    echo json_encode($data);
+    exit;
 }
 ?>

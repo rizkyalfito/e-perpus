@@ -16,7 +16,6 @@
                     var yy = date.getYear();
                     var year = (yy < 1000) ? yy + 1900 : yy;
                     document.write(thisDay + ', ' + day + ' ' + months[month] + ' ' + year);
-                    //
                 </script>
             </small>
         </h1>
@@ -52,14 +51,14 @@
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
-                            <?php
-                            include "../../config/koneksi.php";
+                            <tbody>
+                                <?php
+                                include "../../config/koneksi.php";
 
-                            $no = 1;
-                            $query = mysqli_query($koneksi, "SELECT * FROM user WHERE role = 'Anggota'");
-                            while ($row = mysqli_fetch_assoc($query)) {
-                            ?>
-                                <tbody>
+                                $no = 1;
+                                $query = mysqli_query($koneksi, "SELECT * FROM user WHERE role = 'Anggota'");
+                                while ($row = mysqli_fetch_assoc($query)) {
+                                ?>
                                     <tr>
                                         <td><?php echo $no++; ?></td>
                                         <td><?php echo $row['kode_user']; ?></td>
@@ -116,44 +115,44 @@
                                                         </div>
                                                         <div class="form-group">
                                                             <label>Kelas <small style="color: red;">* Wajib diisi</small></label>
-                                                            <select class="form-control" name="kElas">
+                                                            <select class="form-control" name="kElas" required>
                                                                 <?php
-                                                                if ($row['kelas'] == null) {
-                                                                    echo "<option selected disabled>Silahkan pilih kelas dari [" . $row['fullname'] . "]</option>";
+                                                                if ($row['kelas'] == null || $row['kelas'] == '') {
+                                                                    echo "<option value='' selected disabled>Silahkan pilih kelas dari [" . $row['fullname'] . "]</option>";
                                                                 } else {
                                                                     echo "<option selected value='" . $row['kelas'] . "'>" . $row['kelas'] . " ( Dipilih Sebelumnya )</option>";
                                                                 }
                                                                 ?>
                                                                 <option disabled>------------------------------------------</option>
-                                                                <!-- X -->
-                                                                <option value="X - Administrasi Perkantoran">X - Administrasi Perkantoran</option>
-                                                                <option value="X - Farmasi">X - Farmasi</option>
-                                                                <option value="X - Perbankan">X - Perbankan</option>
-                                                                <option value="X - Rekayasa Perangkat Lunak">X - Rekayasa Perangkat Lunak</option>
-                                                                <option value="X - Tata Boga">X - Tata Boga</option>
-                                                                <option value="X - Teknik Kendaraan Ringan">X - Teknik Kendaraan Ringan</option>
-                                                                <option value="X - Teknik Komputer dan Jaringan">X - Teknik Komputer dan Jaringan</option>
-                                                                <option value="X - Teknik Sepeda Motor">X - Teknik Sepeda Motor</option>
-                                                                <!-- XI -->
+                                                                <!-- VII -->
+                                                                <option value="VII a">VII a</option>
+                                                                <option value="VII b">VII b</option>
+                                                                <option value="VII c">VII c</option>
+                                                                <option value="VII d">VII d</option>
+                                                                <option value="VII e">VII e</option>
+                                                                <option value="VII f">VII f</option>
+                                                                <option value="VII g">VII g</option>
+                                                                <option value="VII h">VII h</option>
+                                                                <!-- VIII -->
                                                                 <option disabled>------------------------------------------</option>
-                                                                <option value="XI - Administrasi Perkantoran">XI - Administrasi Perkantoran</option>
-                                                                <option value="XI - Farmasi">XI - Farmasi</option>
-                                                                <option value="XI - Perbankan">XI - Perbankan</option>
-                                                                <option value="XI - Rekayasa Perangkat Lunak">XI - Rekayasa Perangkat Lunak</option>
-                                                                <option value="XI - Tata Boga">XI - Tata Boga</option>
-                                                                <option value="XI - Teknik Kendaraan Ringan">XI - Teknik Kendaraan Ringan</option>
-                                                                <option value="XI - Teknik Komputer dan Jaringan">XI - Teknik Komputer dan Jaringan</option>
-                                                                <option value="XI - Teknik Sepeda Motor">XI - Teknik Sepeda Motor</option>
-                                                                <!-- XII -->
+                                                                <option value="VIII a">VIII a</option>
+                                                                <option value="VIII b">VIII b</option>
+                                                                <option value="VIII c">VIII c</option>
+                                                                <option value="VIII d">VIII d</option>
+                                                                <option value="VIII e">VIII e</option>
+                                                                <option value="VIII f">VIII f</option>
+                                                                <option value="VIII g">VIII g</option>
+                                                                <option value="VIII h">VIII h</option>
+                                                                <!-- IX -->
                                                                 <option disabled>------------------------------------------</option>
-                                                                <option value="XII - Administrasi Perkantoran">XII - Administrasi Perkantoran</option>
-                                                                <option value="XII - Farmasi">XII - Farmasi</option>
-                                                                <option value="XII - Perbankan">XII - Perbankan</option>
-                                                                <option value="XII - Rekayasa Perangkat Lunak">XII - Rekayasa Perangkat Lunak</option>
-                                                                <option value="XII - Tata Boga">XII - Tata Boga</option>
-                                                                <option value="XII - Teknik Kendaraan Ringan">XII - Teknik Kendaraan Ringan</option>
-                                                                <option value="XII - Teknik Komputer dan Jaringan">XII - Teknik Komputer dan Jaringan</option>
-                                                                <option value="XII - Teknik Sepeda Motor">XII - Teknik Sepeda Motor</option>
+                                                                <option value="IX a">IX a</option>
+                                                                <option value="IX b">IX b</option>
+                                                                <option value="IX c">IX c</option>
+                                                                <option value="IX d">IX d</option>
+                                                                <option value="IX e">IX e</option>
+                                                                <option value="IX f">IX f</option>
+                                                                <option value="IX g">IX g</option>
+                                                                <option value="IX h">IX h</option>
                                                             </select>
                                                         </div>
                                                         <div class="form-group">
@@ -226,11 +225,10 @@
                                         </div>
                                     </div>
                                     <!-- /. Modal Kartu Anggota-->
-
-                                </tbody>
-                            <?php
-                            }
-                            ?>
+                                <?php
+                                }
+                                ?>
+                            </tbody>
                         </table>
                     </div>
                     <!-- /.box-body -->
@@ -258,15 +256,16 @@
                     <div class="form-group">
                         <label>Kode Anggota <small style="color: red;">* Otomatis Terisi</small></label>
                         <?php
+                        // Koneksi untuk modal tambah anggota
                         include "../../config/koneksi.php";
 
-                        $query = mysqli_query($koneksi, "SELECT max(kode_user) as kodeTerakhir FROM user");
-                        $data = mysqli_fetch_array($query);
-                        $kodeTerakhir = $data['kodeTerakhir'];
+                        $query_kode = mysqli_query($koneksi, "SELECT max(kode_user) as kodeTerakhir FROM user");
+                        $data_kode = mysqli_fetch_array($query_kode);
+                        $kodeTerakhir = $data_kode['kodeTerakhir'];
 
                         // mengambil angka dari kode barang terbesar, menggunakan fungsi substr
                         // dan diubah ke integer dengan (int)
-                        $urutan = (int) substr($kodeTerakhir, 3, 3);
+                        $urutan = (int) substr($kodeTerakhir, 2, 3);
 
                         // bilangan yang diambil ini ditambah 1 untuk menentukan nomor urut berikutnya
                         $urutan++;
@@ -298,42 +297,43 @@
                     </div>
                     <div class="form-group">
                         <label>Kelas <small style="color: red;">* Wajib diisi</small></label>
-                        <select class="form-control" name="kelas">
-                            <option disabled selected>-- Harap Pilih Kelas --</option>
-                            <!-- X -->
-                            <option value="X - Administrasi Perkantoran">X - Administrasi Perkantoran</option>
-                            <option value="X - Farmasi">X - Farmasi</option>
-                            <option value="X - Perbankan">X - Perbankan</option>
-                            <option value="X - Rekayasa Perangkat Lunak">X - Rekayasa Perangkat Lunak</option>
-                            <option value="X - Tata Boga">X - Tata Boga</option>
-                            <option value="X - Teknik Kendaraan Ringan">X - Teknik Kendaraan Ringan</option>
-                            <option value="X - Teknik Komputer dan Jaringan">X - Teknik Komputer dan Jaringan</option>
-                            <option value="X - Teknik Sepeda Motor">X - Teknik Sepeda Motor</option>
-                            <!-- XI -->
+                        <select class="form-control" name="kElas" required>
+                            <option value="" selected disabled>-- Pilih Kelas --</option>
                             <option disabled>------------------------------------------</option>
-                            <option value="XI - Administrasi Perkantoran">XI - Administrasi Perkantoran</option>
-                            <option value="XI - Farmasi">XI - Farmasi</option>
-                            <option value="XI - Perbankan">XI - Perbankan</option>
-                            <option value="XI - Rekayasa Perangkat Lunak">XI - Rekayasa Perangkat Lunak</option>
-                            <option value="XI - Tata Boga">XI - Tata Boga</option>
-                            <option value="XI - Teknik Kendaraan Ringan">XI - Teknik Kendaraan Ringan</option>
-                            <option value="XI - Teknik Komputer dan Jaringan">XI - Teknik Komputer dan Jaringan</option>
-                            <option value="XI - Teknik Sepeda Motor">XI - Teknik Sepeda Motor</option>
-                            <!-- XII -->
+                            <!-- VII -->
+                            <option value="VII a">VII a</option>
+                            <option value="VII b">VII b</option>
+                            <option value="VII c">VII c</option>
+                            <option value="VII d">VII d</option>
+                            <option value="VII e">VII e</option>
+                            <option value="VII f">VII f</option>
+                            <option value="VII g">VII g</option>
+                            <option value="VII h">VII h</option>
+                            <!-- VIII -->
                             <option disabled>------------------------------------------</option>
-                            <option value="XII - Administrasi Perkantoran">XII - Administrasi Perkantoran</option>
-                            <option value="XII - Farmasi">XII - Farmasi</option>
-                            <option value="XII - Perbankan">XII - Perbankan</option>
-                            <option value="XII - Rekayasa Perangkat Lunak">XII - Rekayasa Perangkat Lunak</option>
-                            <option value="XII - Tata Boga">XII - Tata Boga</option>
-                            <option value="XII - Teknik Kendaraan Ringan">XII - Teknik Kendaraan Ringan</option>
-                            <option value="XII - Teknik Komputer dan Jaringan">XII - Teknik Komputer dan Jaringan</option>
-                            <option value="XII - Teknik Sepeda Motor">XII - Teknik Sepeda Motor</option>
+                            <option value="VIII a">VIII a</option>
+                            <option value="VIII b">VIII b</option>
+                            <option value="VIII c">VIII c</option>
+                            <option value="VIII d">VIII d</option>
+                            <option value="VIII e">VIII e</option>
+                            <option value="VIII f">VIII f</option>
+                            <option value="VIII g">VIII g</option>
+                            <option value="VIII h">VIII h</option>
+                            <!-- IX -->
+                            <option disabled>------------------------------------------</option>
+                            <option value="IX a">IX a</option>
+                            <option value="IX b">IX b</option>
+                            <option value="IX c">IX c</option>
+                            <option value="IX d">IX d</option>
+                            <option value="IX e">IX e</option>
+                            <option value="IX f">IX f</option>
+                            <option value="IX g">IX g</option>
+                            <option value="IX h">IX h</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Alamat <small style="color: red;">* Wajib diisi</small></label>
-                        <textarea class="form-control" style="resize: none; height: 70px;" name="alamat" required></textarea>
+                        <textarea class="form-control" style="resize: none; height: 70px;" name="alamat" placeholder="Masukan alamat lengkap" required></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
