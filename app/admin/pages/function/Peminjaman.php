@@ -21,20 +21,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($pinjam_data['jumlah'] >= 3) { // Maksimal 3 buku
                 echo json_encode([
                     'status' => 'error',
-                    'message' => 'Anggota sudah meminjam maksimal 3 buku. Mohon kembalikan buku terlebih dahulu.'
+                    'message' => 'Anggota sudah meminjam maksimal 3 buku. Mohon kembalikan buku terlebih dahulu.',
+                    'notification_type' => 'scan_error'
                 ]);
             } else {
                 echo json_encode([
                     'status' => 'success',
                     'data' => $data,
                     'jumlah_pinjam' => $pinjam_data['jumlah'],
-                    'message' => 'Anggota ditemukan'
+                    'message' => 'Data anggota berhasil ditemukan',
+                    'notification_type' => 'scan_success'
                 ]);
             }
         } else {
             echo json_encode([
                 'status' => 'error',
-                'message' => 'Anggota dengan kode tersebut tidak ditemukan'
+                'message' => 'Anggota dengan kode tersebut tidak ditemukan',
+                'notification_type' => 'scan_error'
             ]);
         }
         exit;
@@ -55,7 +58,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($data['j_buku_baik'] <= 0) {
                 echo json_encode([
                     'status' => 'error',
-                    'message' => 'Buku tidak tersedia (stok habis)'
+                    'message' => 'Buku tidak tersedia (stok habis)',
+                    'notification_type' => 'scan_error'
                 ]);
             } else {
                 // Format ISBN for display (add hyphens)
@@ -64,13 +68,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 echo json_encode([
                     'status' => 'success',
                     'data' => $data,
-                    'message' => 'Buku ditemukan'
+                    'message' => 'Data buku berhasil ditemukan',
+                    'notification_type' => 'scan_success'
                 ]);
             }
         } else {
             echo json_encode([
                 'status' => 'error',
-                'message' => 'Buku dengan ISBN tersebut tidak ditemukan'
+                'message' => 'Buku dengan ISBN tersebut tidak ditemukan',
+                'notification_type' => 'scan_error'
             ]);
         }
         exit;
@@ -88,18 +94,27 @@ if (isset($_GET['aksi'])) {
         $kondisi_buku = mysqli_real_escape_string($koneksi, $_POST['kondisiBuku']);
         $isbn = str_replace('-', '', $_POST['isbn']); // Remove hyphens for database
         
+        // Return JSON response instead of redirect
+        header('Content-Type: application/json');
+        
         // Validasi input
         if (empty($nama_anggota) || empty($judul_buku) || empty($isbn)) {
-            $_SESSION['gagal'] = "Semua field harus diisi!";
-            header("location: " . $_SERVER['HTTP_REFERER']);
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Semua field harus diisi!',
+                'notification_type' => 'form_error'
+            ]);
             exit;
         }
         
         // Cek apakah anggota ada
         $cek_anggota = mysqli_query($koneksi, "SELECT * FROM user WHERE fullname = '$nama_anggota' AND role = 'Anggota'");
         if (mysqli_num_rows($cek_anggota) == 0) {
-            $_SESSION['gagal'] = "Anggota tidak ditemukan!";
-            header("location: " . $_SERVER['HTTP_REFERER']);
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Anggota tidak ditemukan!',
+                'notification_type' => 'form_error'
+            ]);
             exit;
         }
         
@@ -108,23 +123,32 @@ if (isset($_GET['aksi'])) {
         $pinjam_data = mysqli_fetch_assoc($cek_pinjam);
         
         if ($pinjam_data['jumlah'] >= 3) {
-            $_SESSION['gagal'] = "Melebihi batas maksimal peminjaman (3 buku per anggota)!";
-            header("location: " . $_SERVER['HTTP_REFERER']);
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Melebihi batas maksimal peminjaman (3 buku per anggota)!',
+                'notification_type' => 'form_error'
+            ]);
             exit;
         }
         
         // Cek stok buku
         $cek_buku = mysqli_query($koneksi, "SELECT * FROM buku WHERE isbn = '$isbn'");
         if (mysqli_num_rows($cek_buku) == 0) {
-            $_SESSION['gagal'] = "Buku tidak ditemukan!";
-            header("location: " . $_SERVER['HTTP_REFERER']);
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Buku tidak ditemukan!',
+                'notification_type' => 'form_error'
+            ]);
             exit;
         }
         
         $data_buku = mysqli_fetch_assoc($cek_buku);
         if ($data_buku['j_buku_baik'] <= 0) {
-            $_SESSION['gagal'] = "Stok buku tidak tersedia!";
-            header("location: " . $_SERVER['HTTP_REFERER']);
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Stok buku tidak tersedia!',
+                'notification_type' => 'form_error'
+            ]);
             exit;
         }
         
@@ -150,18 +174,30 @@ if (isset($_GET['aksi'])) {
             // Commit transaction
             mysqli_commit($koneksi);
             
-            $_SESSION['berhasil'] = "Berhasil memproses peminjaman buku!";
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Peminjaman buku berhasil disimpan!',
+                'notification_type' => 'form_success',
+                'data' => [
+                    'nama_anggota' => $nama_anggota,
+                    'judul_buku' => $judul_buku,
+                    'tanggal_pinjam' => $tanggal_pinjam,
+                    'tanggal_kembali' => $tanggal_kembali
+                ]
+            ]);
             
         } catch (Exception $e) {
             // Rollback transaction
             mysqli_rollback($koneksi);
-            $_SESSION['gagal'] = "Error: " . $e->getMessage();
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Error: ' . $e->getMessage(),
+                'notification_type' => 'form_error'
+            ]);
         }
         
         // Reset autocommit
         mysqli_autocommit($koneksi, TRUE);
-        
-        header("location: " . $_SERVER['HTTP_REFERER']);
         exit;
     }
     
@@ -170,6 +206,9 @@ if (isset($_GET['aksi'])) {
         $tanggal_dikembalikan = date('Y-m-d');
         $kondisi_buku_kembali = $_POST['kondisiBuku'];
         $denda = isset($_POST['denda']) ? $_POST['denda'] : 0;
+        
+        // Return JSON response instead of redirect
+        header('Content-Type: application/json');
         
         // Begin transaction
         mysqli_autocommit($koneksi, FALSE);
@@ -213,18 +252,30 @@ if (isset($_GET['aksi'])) {
             // Commit transaction
             mysqli_commit($koneksi);
             
-            $_SESSION['berhasil'] = "Buku berhasil dikembalikan!";
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Buku berhasil dikembalikan!',
+                'notification_type' => 'form_success',
+                'data' => [
+                    'nama_anggota' => $data_pinjam['nama_anggota'],
+                    'judul_buku' => $data_pinjam['judul_buku'],
+                    'kondisi_kembali' => $kondisi_buku_kembali,
+                    'denda' => $denda
+                ]
+            ]);
             
         } catch (Exception $e) {
             // Rollback transaction
             mysqli_rollback($koneksi);
-            $_SESSION['gagal'] = "Error: " . $e->getMessage();
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Error: ' . $e->getMessage(),
+                'notification_type' => 'form_error'
+            ]);
         }
         
         // Reset autocommit
         mysqli_autocommit($koneksi, TRUE);
-        
-        header("location: " . $_SERVER['HTTP_REFERER']);
         exit;
     }
     
@@ -232,20 +283,30 @@ if (isset($_GET['aksi'])) {
         $id_peminjaman = $_POST['idPeminjaman'];
         $tanggal_kembali_baru = $_POST['tanggalKembaliBaru'];
         
+        header('Content-Type: application/json');
+        
         $sql = "UPDATE peminjaman SET tanggal_pengembalian = '$tanggal_kembali_baru' WHERE id_peminjaman = '$id_peminjaman'";
         
         if (mysqli_query($koneksi, $sql)) {
-            $_SESSION['berhasil'] = "Peminjaman berhasil diperpanjang!";
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Peminjaman berhasil diperpanjang!',
+                'notification_type' => 'form_success'
+            ]);
         } else {
-            $_SESSION['gagal'] = "Gagal memperpanjang peminjaman!";
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Gagal memperpanjang peminjaman!',
+                'notification_type' => 'form_error'
+            ]);
         }
-        
-        header("location: " . $_SERVER['HTTP_REFERER']);
         exit;
     }
     
     elseif ($_GET['aksi'] == "hapus") {
         $id_peminjaman = $_GET['id'];
+        
+        header('Content-Type: application/json');
         
         // Begin transaction
         mysqli_autocommit($koneksi, FALSE);
@@ -281,18 +342,24 @@ if (isset($_GET['aksi'])) {
             // Commit transaction
             mysqli_commit($koneksi);
             
-            $_SESSION['berhasil'] = "Data peminjaman berhasil dihapus!";
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Data peminjaman berhasil dihapus!',
+                'notification_type' => 'form_success'
+            ]);
             
         } catch (Exception $e) {
             // Rollback transaction
             mysqli_rollback($koneksi);
-            $_SESSION['gagal'] = "Error: " . $e->getMessage();
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Error: ' . $e->getMessage(),
+                'notification_type' => 'form_error'
+            ]);
         }
         
         // Reset autocommit
         mysqli_autocommit($koneksi, TRUE);
-        
-        header("location: " . $_SERVER['HTTP_REFERER']);
         exit;
     }
 }

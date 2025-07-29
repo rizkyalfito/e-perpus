@@ -98,11 +98,11 @@
                                                         <input type="hidden" name="id_buku" value="<?= $row['id_buku']; ?>">
                                                         <div class="form-group">
                                                             <label>Judul Buku <small style="color: red;">* Wajib diisi</small></label>
-                                                            <input type="text" class="form-control" value="<?= $row['judul_buku']; ?>" name="judulBuku">
+                                                            <input type="text" class="form-control" value="<?= $row['judul_buku']; ?>" name="judulBuku" required>
                                                         </div>
                                                         <div class="form-group">
                                                             <label>Kategori Buku <small style="color: red;">* Wajib diisi</small></label>
-                                                            <select class="form-control" name="kategoriBuku">
+                                                            <select class="form-control" name="kategoriBuku" required>
                                                                 <option selected value="<?= $row['kategori_buku']; ?>"><?= $row['kategori_buku']; ?> ( Dipilih Sebelumnya )</option>
                                                                 <?php
                                                                 include "../../config/koneksi.php";
@@ -117,7 +117,7 @@
                                                         </div>
                                                         <div class="form-group">
                                                             <label>Penerbit Buku <small style="color: red;">* Wajib diisi</small></label>
-                                                            <select class="form-control select2" name="penerbitBuku">
+                                                            <select class="form-control select2" name="penerbitBuku" required>
                                                                 <option selected value="<?= $row['penerbit_buku']; ?>"><?= $row['penerbit_buku']; ?> ( Dipilih Sebelumnya )</option>
                                                                 <?php
                                                                 include "../../config/koneksi.php";
@@ -132,27 +132,30 @@
                                                         </div>
                                                         <div class="form-group">
                                                             <label>Pengarang <small style="color: red;">* Wajib diisi</small></label>
-                                                            <input type="text" class="form-control" value="<?= $row['pengarang']; ?>" name="pengarang" required>
+                                                            <input type="text" class="form-control" value="<?= $row['pengarang']; ?>" name="pengarang" placeholder="Masukkan nama pengarang" required>
+                                                            <small class="text-muted">Contoh: Ahmad Tohari, Pramoedya Ananta Toer, dll.</small>
                                                         </div>
                                                         <div class="form-group">
                                                             <label>Tahun Terbit <small style="color: red;">* Wajib diisi</small></label>
-                                                            <input type="number" min="2000" max="2100" class="form-control" value="<?= $row['tahun_terbit']; ?>" name="tahunTerbit" required>
+                                                            <input type="number" min="1900" max="<?= date('Y') + 5; ?>" class="form-control" value="<?= $row['tahun_terbit']; ?>" name="tahunTerbit" required>
                                                         </div>
                                                         <div class="form-group">
                                                             <label>ISBN <small style="color: red;">* Wajib diisi</small></label>
-                                                            <input type="number" class="form-control" value="<?= $row['isbn']; ?>" name="iSbn" required>
+                                                            <input type="text" class="form-control" value="<?= $row['isbn']; ?>" name="iSbn" placeholder="Contoh: 978-602-8519-93-9" required>
+                                                            <small class="text-muted">Masukkan nomor ISBN lengkap dengan tanda hubung</small>
                                                         </div>
                                                         <div class="form-group">
                                                             <label>Jumlah Buku Baik <small style="color: red;">* Wajib diisi</small></label>
-                                                            <input type="number" class="form-control" value="<?= $row['j_buku_baik']; ?>" name="jumlahBukuBaik" required>
+                                                            <input type="number" min="0" class="form-control" value="<?= $row['j_buku_baik']; ?>" name="jumlahBukuBaik" required>
                                                         </div>
                                                         <div class="form-group">
                                                             <label>Jumlah Buku Rusak <small style="color: red;">* Wajib diisi</small></label>
-                                                            <input type="number" class="form-control" value="<?= $row['j_buku_rusak']; ?>" name="jumlahBukuRusak" required>
+                                                            <input type="number" min="0" class="form-control" value="<?= $row['j_buku_rusak']; ?>" name="jumlahBukuRusak" required>
                                                         </div>
                                                     </div>
                                                     <div class="modal-footer">
-                                                        <button type="submit" class="btn btn-primary btn-block">Simpan</button>
+                                                        <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+                                                        <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
                                                     </div>
                                                 </form>
                                             </div>
@@ -189,12 +192,12 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label>Judul Buku <small style="color: red;">* Wajib diisi</small></label>
-                        <input type="text" class="form-control" placeholder="Masukan Judul Buku" name="judulBuku">
+                        <input type="text" class="form-control" placeholder="Masukkan judul buku" name="judulBuku" required>
                     </div>
                     <div class="form-group">
                         <label>Kategori Buku <small style="color: red;">* Wajib diisi</small></label>
-                        <select class="form-control" name="kategoriBuku">
-                            <option selected>-- Harap pilih kategori buku --</option>
+                        <select class="form-control" name="kategoriBuku" required>
+                            <option value="" disabled selected>-- Pilih kategori buku --</option>
                             <?php
                             include "../../config/koneksi.php";
                             $sql = mysqli_query($koneksi, "SELECT * FROM kategori");
@@ -208,42 +211,35 @@
                     </div>
                     <div class="form-group">
                         <label>Penerbit Buku <small style="color: red;">* Wajib diisi</small></label>
-                        <select class="form-control select2" name="penerbitBuku">
-                            <option selected disabled>-- Harap Pilih Penerbit Buku --</option>
-                            <?php
-                            include "../../config/koneksi.php";
-                            $sql = mysqli_query($koneksi, "SELECT * FROM penerbit");
-                            while ($data = mysqli_fetch_array($sql)) {
-                            ?>
-                                <option value="<?= $data['nama_penerbit']; ?>"><?= $data['nama_penerbit']; ?> ( <?= $data['verif_penerbit']; ?> )</option>
-                            <?php
-                            }
-                            ?>
-                        </select>
+                        <input type="text" class="form-control" placeholder="Masukkan nama penerbit" name="penerbitBuku" required>
+                        <small class="text-muted">Contoh: Gramedia Pustaka Utama, Mizan, Erlangga, dll.</small>
                     </div>
                     <div class="form-group">
                         <label>Pengarang <small style="color: red;">* Wajib diisi</small></label>
-                        <input type="text" class="form-control" placeholder="Masukan Nama Pengarang" name="pengarang" required>
+                        <input type="text" class="form-control" placeholder="Masukkan nama pengarang" name="pengarang" required>
+                        <small class="text-muted">Contoh: Ahmad Tohari, Pramoedya Ananta Toer, dll.</small>
                     </div>
                     <div class="form-group">
                         <label>Tahun Terbit <small style="color: red;">* Wajib diisi</small></label>
-                        <input type="number" min="2000" max="2100" class="form-control" placeholder="Masukan Tahun Terbit ( Contoh : 2003 )" name="tahunTerbit" required>
+                        <input type="number" min="1900" max="<?= date('Y') + 5; ?>" class="form-control" placeholder="Contoh: <?= date('Y'); ?>" name="tahunTerbit" required>
                     </div>
                     <div class="form-group">
                         <label>ISBN <small style="color: red;">* Wajib diisi</small></label>
-                        <input type="number" class="form-control" placeholder="Masukan ISBN" name="iSbn" required>
+                        <input type="text" class="form-control" placeholder="Contoh: 978-602-8519-93-9" name="iSbn" required>
+                        <small class="text-muted">Masukkan nomor ISBN lengkap dengan tanda hubung</small>
                     </div>
                     <div class="form-group">
                         <label>Jumlah Buku Baik <small style="color: red;">* Wajib diisi</small></label>
-                        <input type="number" class="form-control" placeholder="Masukan Jumlah Buku Baik" name="jumlahBukuBaik" required>
+                        <input type="number" min="0" class="form-control" placeholder="Masukkan jumlah buku baik" name="jumlahBukuBaik" required>
                     </div>
                     <div class="form-group">
                         <label>Jumlah Buku Rusak <small style="color: red;">* Wajib diisi</small></label>
-                        <input type="number" class="form-control" placeholder="Masukan Jumlah Buku Rusak" name="jumlahBukuRusak" required>
+                        <input type="number" min="0" class="form-control" placeholder="Masukkan jumlah buku rusak" name="jumlahBukuRusak" required>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary btn-block">Simpan</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
                 </div>
             </form>
         </div>
@@ -425,12 +421,15 @@ function cetakLabel(isbn, judul, pengarang, jumlah) {
         <body>
     `;
     
+    // Generate barcode URL yang akan berfungsi saat print
+    const barcodeImageUrl = `https://barcode.tec-it.com/barcode.ashx?data=${isbn}&code=Code128&translate-esc=true&width=200&height=50&dpi=300`;
+    
     for (let i = 0; i < jumlah; i++) {
         content += `
             <div class="label">
-                <h6>${judul.length > 25 ? judul.substring(0, 25) + '...' : judul}</h6>
-                <p>Pengarang: ${pengarang}</p>
-                <img src="https://barcode.tec-it.com/barcode.ashx?data=${isbn}&code=Code128&translate-esc=true&width=200&height=50" alt="Barcode">
+                <h6>${judul && judul.length > 25 ? judul.substring(0, 25) + '...' : judul || 'Judul Tidak Tersedia'}</h6>
+                <p>Pengarang: ${pengarang || 'Tidak Diketahui'}</p>
+                <img src="${barcodeImageUrl}" alt="Barcode ${isbn}" onerror="this.alt='Barcode: ${isbn}';">
                 <p><strong>ISBN: ${isbn}</strong></p>
             </div>
         `;
@@ -441,25 +440,25 @@ function cetakLabel(isbn, judul, pengarang, jumlah) {
         </html>
     `;
     
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
     printWindow.document.write(content);
     printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-    printWindow.close();
+    
+    // Tunggu gambar barcode dimuat sebelum print
+    printWindow.onload = function() {
+        setTimeout(function() {
+            printWindow.focus();
+            printWindow.print();
+        }, 1000); // Delay 1 detik untuk memastikan gambar dimuat
+    };
 }
 
 function downloadBarcode() {
     const isbn = document.getElementById('bukuISBN').textContent;
     const judul = document.getElementById('bukuJudul').textContent;
     
-    // Alternatif 1: Gunakan parameter format=png
     const barcodeUrl = `https://barcode.tec-it.com/barcode.ashx?data=${isbn}&code=Code128&translate-esc=true&width=400&height=100&format=png&download=true`;
     
-    // Alternatif 2: Jika tetap tidak bisa, gunakan service lain
-    // const barcodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x100&data=${isbn}&format=png`;
-    
-    // Create temporary link to download
     const link = document.createElement('a');
     link.href = barcodeUrl;
     link.download = `barcode_${judul.replace(/[^a-zA-Z0-9]/g, '_')}_${isbn}.png`;
@@ -469,30 +468,54 @@ function downloadBarcode() {
     document.body.removeChild(link);
 }
 
-// Fungsi alternatif menggunakan fetch (jika server mendukung)
-function downloadBarcodeWithFetch() {
-    const isbn = document.getElementById('bukuISBN').textContent;
-    const judul = document.getElementById('bukuJudul').textContent;
-    
-    const barcodeUrl = `https://barcode.tec-it.com/barcode.ashx?data=${isbn}&code=Code128&translate-esc=true&width=400&height=100&format=png`;
-    
-    fetch(barcodeUrl)
-        .then(response => response.blob())
-        .then(blob => {
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `barcode_${judul.replace(/[^a-zA-Z0-9]/g, '_')}_${isbn}.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
-        })
-        .catch(error => {
-            console.error('Error downloading barcode:', error);
-            alert('Gagal mendownload barcode. Silakan coba lagi.');
+// Form validation untuk memastikan pengarang dan penerbit tidak kosong
+document.addEventListener('DOMContentLoaded', function() {
+    // Validasi untuk form tambah buku
+    const formTambah = document.querySelector('#modalTambahBuku form');
+    if (formTambah) {
+        formTambah.addEventListener('submit', function(e) {
+            const pengarang = this.querySelector('input[name="pengarang"]').value.trim();
+            const penerbit = this.querySelector('input[name="penerbitBuku"]').value.trim();
+            
+            if (pengarang === '') {
+                e.preventDefault();
+                alert('Nama pengarang wajib diisi!');
+                this.querySelector('input[name="pengarang"]').focus();
+                return false;
+            }
+            
+            if (penerbit === '') {
+                e.preventDefault();
+                alert('Nama penerbit wajib diisi!');
+                this.querySelector('input[name="penerbitBuku"]').focus();
+                return false;
+            }
         });
-}
+    }
+    
+    // Validasi untuk semua form edit buku
+    const formsEdit = document.querySelectorAll('form[action*="act=edit"]');
+    formsEdit.forEach(function(form) {
+        form.addEventListener('submit', function(e) {
+            const pengarang = this.querySelector('input[name="pengarang"]').value.trim();
+            const penerbit = this.querySelector('input[name="penerbitBuku"]').value.trim();
+            
+            if (pengarang === '') {
+                e.preventDefault();
+                alert('Nama pengarang wajib diisi!');
+                this.querySelector('input[name="pengarang"]').focus();
+                return false;
+            }
+            
+            if (penerbit === '') {
+                e.preventDefault();
+                alert('Nama penerbit wajib diisi!');
+                this.querySelector('input[name="penerbitBuku"]').focus();
+                return false;
+            }
+        });
+    });
+});
 </script>
 
 <!-- jQuery 3 -->

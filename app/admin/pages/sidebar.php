@@ -60,7 +60,7 @@
                     <li><a href="tambah-pengembalian"><i class="fa fa-circle-o"></i> Tambah Pengembalian</a></li>
                 </ul>
             </li>
-            <li><a href="laporan"><i class="fa fa-book"></i> <span>Denda</span></a></li>
+            <li><a href="laporan"><i class="fa fa-book"></i> <span>Laporan</span></a></li>
             <li><a href="#Logout" data-toggle="modal" data-target="#modalLogoutConfirm"><i class="fa fa-sign-out"></i> <span>Keluar</span></a></li>
         </ul>
     </section>
