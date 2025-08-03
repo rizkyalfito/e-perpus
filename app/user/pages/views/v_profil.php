@@ -122,6 +122,8 @@
                                 <option value="IX F">IX F</option>
                                 <option value="IX G">IX G</option>
                                 <option value="IX H">IX H</option>
+                                <option disabled>------------------------------------------</option>
+                                <option value="Guru">Guru</option>
                             </select>
                         </div>
                             <div class="form-group">

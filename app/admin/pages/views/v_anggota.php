@@ -160,6 +160,8 @@
                                                                 <option value="IX f">IX f</option>
                                                                 <option value="IX g">IX g</option>
                                                                 <option value="IX h">IX h</option>
+                                                                <option disabled>------------------------------------------</option>
+                                                                <option value="Guru">Guru</option>
                                                             </select>
                                                         </div>
                                                         <div class="form-group">
@@ -336,6 +338,8 @@
                             <option value="IX f">IX f</option>
                             <option value="IX g">IX g</option>
                             <option value="IX h">IX h</option>
+                            <option disabled>------------------------------------------</option>
+                            <option value="Guru">Guru</option>
                         </select>
                     </div>
                     <div class="form-group">

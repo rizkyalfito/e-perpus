@@ -1,5 +1,5 @@
 <?php
-// File: pages/content.php untuk dashboard user
+// File: pages/content.php untuk dashboard user - VERSI YANG DIPERBAIKI
 // Cek apakah session sudah dimulai
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
@@ -28,8 +28,13 @@ if (!isset($_SESSION['fullname']) || empty($_SESSION['fullname'])) {
 // Ambil data user yang sedang login
 $fullname = $_SESSION['fullname'];
 
-// Query dengan error handling
-$sql = mysqli_query($koneksi, "SELECT p.*, b.kategori_buku 
+// Query dengan error handling - PERBAIKI untuk menangani kategori yang tidak valid
+$sql = mysqli_query($koneksi, "SELECT p.*, 
+                               CASE 
+                                   WHEN b.kategori_buku IS NULL OR b.kategori_buku = '' OR b.kategori_buku = '-- Harap pilih kategori buku --' 
+                                   THEN 'Belum Dikategorikan' 
+                                   ELSE b.kategori_buku 
+                               END as kategori_buku
                                FROM peminjaman p 
                                LEFT JOIN buku b ON p.judul_buku = b.judul_buku 
                                WHERE p.nama_anggota = '$fullname' 
@@ -41,9 +46,11 @@ if (!$sql) {
     $buku_dipinjam = 0;
     $buku_dikembalikan = 0;
 } else {
-    // Hitung statistik
+    // Hitung statistik - DIPERBAIKI SESUAI DENGAN LOGIKA ADMIN
     $total_peminjaman = mysqli_num_rows($sql);
-    $sql_dipinjam = mysqli_query($koneksi, "SELECT * FROM peminjaman WHERE nama_anggota = '$fullname' AND tanggal_pengembalian = ''");
+    
+    // PERBAIKAN: Gunakan kondisi_buku_saat_dikembalikan seperti di admin
+    $sql_dipinjam = mysqli_query($koneksi, "SELECT * FROM peminjaman WHERE nama_anggota = '$fullname' AND kondisi_buku_saat_dikembalikan = ''");
     $buku_dipinjam = $sql_dipinjam ? mysqli_num_rows($sql_dipinjam) : 0;
     $buku_dikembalikan = $total_peminjaman - $buku_dipinjam;
 }
@@ -180,22 +187,30 @@ if (!$sql) {
                                     // Reset pointer jika diperlukan
                                     mysqli_data_seek($sql, 0);
                                     while ($data = mysqli_fetch_array($sql)) {
-                                        // Tentukan status berdasarkan tanggal pengembalian
-                                        if (empty($data['tanggal_pengembalian'])) {
+                                        // PERBAIKAN: Tentukan status berdasarkan kondisi_buku_saat_dikembalikan seperti di admin
+                                        if (empty($data['kondisi_buku_saat_dikembalikan'])) {
                                             $status = '<span class="label label-warning">Dipinjam</span>';
                                             $keterangan = '-';
                                             $denda = '-';
-                                            $tgl_kembali = '-';
-                                        } else {
-                                            $status = '<span class="label label-success">Dikembalikan</span>';
-                                            $keterangan = !empty($data['kondisi_buku_saat_dikembalikan']) ? $data['kondisi_buku_saat_dikembalikan'] : '-';
-                                            $denda = !empty($data['denda']) ? $data['denda'] : '-';
-                                            // Format tanggal pengembalian
+                                            // Tampilkan tanggal harus kembali dari tanggal_pengembalian
                                             try {
                                                 $tgl_kembali = date('d-m-Y', strtotime(str_replace('-', '/', $data['tanggal_pengembalian'])));
                                             } catch (Exception $e) {
                                                 $tgl_kembali = $data['tanggal_pengembalian'];
                                             }
+                                        } else {
+                                            $status = '<span class="label label-success">Dikembalikan</span>';
+                                            $keterangan = $data['kondisi_buku_saat_dikembalikan'];
+                                            
+                                            // PERBAIKAN: Validasi data denda sebelum number_format
+                                            if (!empty($data['denda']) && is_numeric($data['denda'])) {
+                                                $denda = 'Rp ' . number_format($data['denda'], 0, ',', '.');
+                                            } else {
+                                                $denda = 'Rp 0';
+                                            }
+                                            
+                                            // Untuk yang sudah dikembalikan, tampilkan tanggal aktual pengembalian
+                                            $tgl_kembali = date('d-m-Y', strtotime(str_replace('-', '/', $data['tanggal_pengembalian'])));
                                         }
                                         
                                         // Format tanggal peminjaman
@@ -212,7 +227,17 @@ if (!$sql) {
                                             <td style="border: 1px solid #000; text-align: center; padding: 10px;"><?= $no++; ?></td>
                                             <td style="border: 1px solid #000; text-align: center; padding: 10px;"><?= $no_pinjam; ?></td>
                                             <td style="border: 1px solid #000; padding: 10px;"><?= htmlspecialchars($data['judul_buku']); ?></td>
-                                            <td style="border: 1px solid #000; text-align: center; padding: 10px;"><?= !empty($data['kategori_buku']) ? htmlspecialchars($data['kategori_buku']) : '-'; ?></td>
+                                            <td style="border: 1px solid #000; text-align: center; padding: 10px;">
+                                                <?php 
+                                                // PERBAIKAN: Handle kategori yang tidak valid
+                                                $kategori = $data['kategori_buku'];
+                                                if (empty($kategori) || $kategori == '-- Harap pilih kategori buku --') {
+                                                    echo '<span style="color: #999; font-style: italic;">Belum Dikategorikan</span>';
+                                                } else {
+                                                    echo htmlspecialchars($kategori);
+                                                }
+                                                ?>
+                                            </td>
                                             <td style="border: 1px solid #000; text-align: center; padding: 10px;"><?= $tgl_pinjam; ?></td>
                                             <td style="border: 1px solid #000; text-align: center; padding: 10px;"><?= $tgl_kembali; ?></td>
                                             <td style="border: 1px solid #000; text-align: center; padding: 10px;"><?= $status; ?></td>
