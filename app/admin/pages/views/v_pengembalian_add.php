@@ -632,7 +632,7 @@ function checkDueSoon() {
         swal({
             icon: 'warning',
             title: 'Peringatan Jatuh Tempo',
-            text: `${dueSoonBooks.length} buku akan jatuh tempo dalam 2 hari:\n\n${booksList}`,
+            text: `${dueSoonBooks.length} buku akan jatuh tempo dalam waktu dekat\n\n${booksList}`,
             buttons: {
                 ok: {
                     text: 'OK',
