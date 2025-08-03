@@ -45,37 +45,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Cari Buku berdasarkan ISBN
     if (isset($_POST['aksi']) && $_POST['aksi'] === 'cari_buku') {
-        $isbn_input = mysqli_real_escape_string($koneksi, $_POST['isbn']);
+        $barcode_input = mysqli_real_escape_string($koneksi, $_POST['isbn']);
         
-        // Convert ISBN input to integer for database search (remove hyphens)
-        $isbn_number = str_replace('-', '', $isbn_input);
-        
-        $query = mysqli_query($koneksi, "SELECT * FROM buku WHERE isbn = '$isbn_number'");
+        // Cari buku_unit berdasarkan barcode unik
+        $query = mysqli_query($koneksi, "SELECT bu.*, b.judul_buku, b.kategori_buku, b.penerbit_buku, b.pengarang 
+                                         FROM buku_unit bu 
+                                         JOIN buku b ON bu.id_buku = b.id_buku 
+                                         WHERE bu.barcode = '$barcode_input' AND bu.status = 'tersedia'");
         
         if (mysqli_num_rows($query) > 0) {
             $data = mysqli_fetch_assoc($query);
             
-            if ($data['j_buku_baik'] <= 0) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Buku tidak tersedia (stok habis)',
-                    'notification_type' => 'scan_error'
-                ]);
-            } else {
-                // Format ISBN for display (add hyphens)
-                $data['isbn_display'] = $isbn_input;
-                
-                echo json_encode([
-                    'status' => 'success',
-                    'data' => $data,
-                    'message' => 'Data buku berhasil ditemukan',
-                    'notification_type' => 'scan_success'
-                ]);
-            }
+            echo json_encode([
+                'status' => 'success',
+                'data' => $data,
+                'message' => 'Data buku berhasil ditemukan',
+                'notification_type' => 'scan_success'
+            ]);
         } else {
             echo json_encode([
                 'status' => 'error',
-                'message' => 'Buku dengan ISBN tersebut tidak ditemukan',
+                'message' => 'Buku dengan barcode tersebut tidak ditemukan atau sedang dipinjam',
                 'notification_type' => 'scan_error'
             ]);
         }
@@ -92,13 +82,13 @@ if (isset($_GET['aksi'])) {
         $tanggal_pinjam = $_POST['tanggalPinjam'];
         $tanggal_kembali = $_POST['tanggalKembali'];
         $kondisi_buku = mysqli_real_escape_string($koneksi, $_POST['kondisiBuku']);
-        $isbn = str_replace('-', '', $_POST['isbn']); // Remove hyphens for database
+        $barcode = $_POST['isbn']; // now barcode per unit
         
         // Return JSON response instead of redirect
         header('Content-Type: application/json');
         
         // Validasi input
-        if (empty($nama_anggota) || empty($judul_buku) || empty($isbn)) {
+        if (empty($nama_anggota) || empty($judul_buku) || empty($barcode)) {
             echo json_encode([
                 'status' => 'error',
                 'message' => 'Semua field harus diisi!',
@@ -131,26 +121,18 @@ if (isset($_GET['aksi'])) {
             exit;
         }
         
-        // Cek stok buku
-        $cek_buku = mysqli_query($koneksi, "SELECT * FROM buku WHERE isbn = '$isbn'");
-        if (mysqli_num_rows($cek_buku) == 0) {
+        // Cek stok buku_unit berdasarkan barcode
+        $cek_buku_unit = mysqli_query($koneksi, "SELECT * FROM buku_unit WHERE barcode = '$barcode' AND status = 'tersedia'");
+        if (mysqli_num_rows($cek_buku_unit) == 0) {
             echo json_encode([
                 'status' => 'error',
-                'message' => 'Buku tidak ditemukan!',
+                'message' => 'Buku dengan barcode tersebut tidak tersedia atau sedang dipinjam!',
                 'notification_type' => 'form_error'
             ]);
             exit;
         }
         
-        $data_buku = mysqli_fetch_assoc($cek_buku);
-        if ($data_buku['j_buku_baik'] <= 0) {
-            echo json_encode([
-                'status' => 'error',
-                'message' => 'Stok buku tidak tersedia!',
-                'notification_type' => 'form_error'
-            ]);
-            exit;
-        }
+        $data_buku_unit = mysqli_fetch_assoc($cek_buku_unit);
         
         // Begin transaction
         mysqli_autocommit($koneksi, FALSE);
@@ -164,11 +146,11 @@ if (isset($_GET['aksi'])) {
                 throw new Exception("Gagal menyimpan data peminjaman");
             }
             
-            // Update stok buku (kurangi 1)
-            $sql_update_stok = "UPDATE buku SET j_buku_baik = j_buku_baik - 1 WHERE isbn = '$isbn'";
+            // Update status buku_unit menjadi dipinjam
+            $sql_update_unit = "UPDATE buku_unit SET status = 'dipinjam' WHERE barcode = '$barcode'";
             
-            if (!mysqli_query($koneksi, $sql_update_stok)) {
-                throw new Exception("Gagal mengupdate stok buku");
+            if (!mysqli_query($koneksi, $sql_update_unit)) {
+                throw new Exception("Gagal mengupdate status buku unit");
             }
             
             // Commit transaction
@@ -232,20 +214,14 @@ if (isset($_GET['aksi'])) {
                 throw new Exception("Gagal mengupdate data peminjaman");
             }
             
-            // Get ISBN dari judul buku untuk update stok
-            $query_buku = mysqli_query($koneksi, "SELECT isbn FROM buku WHERE judul_buku = '".$data_pinjam['judul_buku']."'");
-            $data_buku = mysqli_fetch_assoc($query_buku);
+            // Get barcode dari peminjaman untuk update status buku_unit
+            $barcode = $_POST['barcode'];
             
-            if ($data_buku) {
-                // Update stok buku
-                if ($kondisi_buku_kembali === 'baik') {
-                    $sql_update_stok = "UPDATE buku SET j_buku_baik = j_buku_baik + 1 WHERE isbn = '".$data_buku['isbn']."'";
-                } else {
-                    $sql_update_stok = "UPDATE buku SET j_buku_rusak = j_buku_rusak + 1 WHERE isbn = '".$data_buku['isbn']."'";
-                }
-                
-                if (!mysqli_query($koneksi, $sql_update_stok)) {
-                    throw new Exception("Gagal mengupdate stok buku");
+            if ($barcode) {
+                // Update status buku_unit menjadi tersedia
+                $sql_update_unit = "UPDATE buku_unit SET status = 'tersedia' WHERE barcode = '$barcode'";
+                if (!mysqli_query($koneksi, $sql_update_unit)) {
+                    throw new Exception("Gagal mengupdate status buku unit");
                 }
             }
             

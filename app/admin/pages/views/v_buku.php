@@ -48,7 +48,7 @@
                                     <th>Buku Baik</th>
                                     <th>Buku Rusak</th>
                                     <th>Jumlah Buku</th>
-                                    <th>Barcode</th>
+                                    <th>Barcode Units</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
@@ -58,6 +58,12 @@
                             $no = 1;
                             $query = mysqli_query($koneksi, "SELECT * FROM buku");
                             while ($row = mysqli_fetch_assoc($query)) {
+                                // Ambil unit buku dan barcode-nya
+                                $unit_query = mysqli_query($koneksi, "SELECT barcode, kondisi, status FROM buku_unit WHERE id_buku = " . $row['id_buku']);
+                                $units = [];
+                                while ($unit = mysqli_fetch_assoc($unit_query)) {
+                                    $units[] = $unit;
+                                }
                             ?>
                                 <tbody>
                                     <tr>
@@ -72,13 +78,23 @@
                                             $j_buku_baik = $row['j_buku_baik'];
                                             echo $j_buku_rusak + $j_buku_baik;
                                             ?></td>
-                                        <td style="text-align: center;">
-                                            <button onclick="lihatBarcode('<?= $row['isbn']; ?>', '<?= addslashes($row['judul_buku']); ?>', '<?= addslashes($row['pengarang']); ?>')" 
-                                                    class="btn btn-success btn-sm" title="Lihat Barcode">
-                                                <i class="fa fa-barcode"></i>
-                                            </button>
+                                        <td>
+                                            <?php if (count($units) > 0): ?>
+                                            <ul style="list-style-type:none; padding-left: 0; max-height: 150px; overflow-y: auto; margin: 0;">
+                                                <?php foreach ($units as $unit) : ?>
+                                                    <li style="font-size: 12px; line-height: 1.2; margin-bottom: 2px;">
+                                                        <strong><?= htmlspecialchars($unit['barcode']); ?></strong> - 
+                                                        <?= ucfirst(htmlspecialchars($unit['kondisi'])); ?> - 
+                                                        <em><?= $unit['status'] == 'tersedia' ? '<span style="color:green;">Tersedia</span>' : '<span style="color:red;">Dipinjam</span>'; ?></em>
+                                                    </li>
+                                                <?php endforeach; ?>
+                                            </ul>
+                                            <?php else: ?>
+                                                <span>Tidak ada unit buku</span>
+                                            <?php endif; ?>
                                         </td>
                                         <td>
+                                            <a href="#" onclick="lihatBarcodeUnits(<?= $row['id_buku']; ?>, '<?= addslashes($row['judul_buku']); ?>', '<?= addslashes($row['pengarang']); ?>', '<?= $row['isbn']; ?>')" class="btn btn-success btn-sm" title="Lihat Barcode Units"><i class="fa fa-barcode"></i></a>
                                             <a href="#" data-target="#modalEditBuku<?= $row['id_buku']; ?>" data-toggle="modal" class="btn btn-info btn-sm"><i class="fa fa-edit"></i></a>
                                             <a href="pages/function/Buku.php?act=hapus&id=<?= $row['id_buku']; ?>" class="btn btn-danger btn-sm btn-del"><i class="fa fa-trash"></i></a>
                                         </td>
@@ -246,75 +262,68 @@
     </div>
 </div>
 
-<!-- Modal Barcode Buku -->
-<div class="modal fade" id="modalBarcodeBuku" tabindex="-1" role="dialog">
+<!-- Modal Barcode Units -->
+<div class="modal fade" id="modalBarcodeUnits" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
                 <h4 class="modal-title" style="font-family: 'Quicksand', sans-serif; font-weight: bold;">
-                    <i class="fa fa-barcode"></i> Barcode Buku
+                    <i class="fa fa-barcode"></i> Barcode Units Buku
                 </h4>
             </div>
             <div class="modal-body">
+                <!-- Informasi Buku -->
                 <div class="row">
-                    <!-- Informasi Buku -->
-                    <div class="col-md-6">
-                        <div style="border: 2px solid #3c8dbc; border-radius: 10px; padding: 15px; background-color: #f9f9f9;">
+                    <div class="col-md-12">
+                        <div style="border: 2px solid #3c8dbc; border-radius: 10px; padding: 15px; background-color: #f9f9f9; margin-bottom: 20px;">
                             <h4 style="color: #3c8dbc; font-weight: bold; margin-bottom: 15px;">Informasi Buku</h4>
-                            <p><strong>Judul:</strong> <span id="bukuJudul"></span></p>
-                            <p><strong>Pengarang:</strong> <span id="bukuPengarang"></span></p>
-                            <p><strong>ISBN:</strong> <span id="bukuISBN"></span></p>
-                            <p style="font-size: 12px; color: #666; margin-top: 10px;">
-                                * Barcode dibuat berdasarkan ISBN buku untuk memudahkan identifikasi dan peminjaman
-                            </p>
-                        </div>
-                    </div>
-                    
-                    <!-- Barcode -->
-                    <div class="col-md-6">
-                        <div style="text-align: center; border: 2px dashed #28a745; border-radius: 10px; padding: 20px; background-color: #f8f9fa;">
-                            <h4 style="color: #28a745; font-weight: bold; margin-bottom: 15px;">Barcode Buku</h4>
-                            
-                            <!-- Barcode Image -->
-                            <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
-                                <img id="barcodeImage" src="" alt="Barcode" style="max-width: 200px; height: 60px;">
-                            </div>
-                            
-                            <!-- ISBN Number -->
-                            <p style="font-weight: bold; font-size: 14px; color: #333; margin: 10px 0;">
-                                ISBN: <span id="barcodeNumber"></span>
-                            </p>
-                            
-                            <!-- Buttons -->
-                            <div style="margin-top: 15px;">
-                                <button onclick="cetakBarcode()" class="btn btn-success btn-sm" style="margin-right: 10px;">
-                                    <i class="fa fa-print"></i> Cetak Label
-                                </button>
-                                <button onclick="downloadBarcode()" class="btn btn-info btn-sm">
-                                    <i class="fa fa-download"></i> Download
-                                </button>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Judul:</strong> <span id="bukuJudulUnits"></span></p>
+                                    <p><strong>Pengarang:</strong> <span id="bukuPengarangUnits"></span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>ISBN:</strong> <span id="bukuISBNUnits"></span></p>
+                                    <p><strong>Total Units:</strong> <span id="totalUnits"></span></p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Template untuk cetak multiple label -->
+
+                <!-- Daftar Barcode Units -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <h4 style="color: #28a745; font-weight: bold; margin-bottom: 15px;">
+                            <i class="fa fa-list"></i> Daftar Barcode Per Unit
+                        </h4>
+                        <div id="barcodeUnitsContainer" style="max-height: 400px; overflow-y: auto;">
+                            <!-- Units akan di-generate via JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
                 <div class="row" style="margin-top: 20px;">
                     <div class="col-md-12">
                         <div style="border: 1px solid #ddd; border-radius: 5px; padding: 15px; background-color: #fff;">
                             <h5 style="font-weight: bold; color: #333;">
-                                <i class="fa fa-tags"></i> Cetak Multiple Label
+                                <i class="fa fa-print"></i> Cetak Barcode
                             </h5>
                             <div class="form-group" style="margin-top: 10px;">
-                                <label>Jumlah Label yang akan dicetak:</label>
-                                <div style="display: flex; align-items: center;">
-                                    <input type="number" id="jumlahLabel" class="form-control" style="width: 100px; margin-right: 10px;" value="1" min="1" max="50">
-                                    <button onclick="cetakMultipleLabel()" class="btn btn-primary btn-sm">
-                                        <i class="fa fa-print"></i> Cetak Multiple
+                                <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
+                                    <button onclick="cetakSemuaBarcode()" class="btn btn-success btn-sm">
+                                        <i class="fa fa-print"></i> Cetak Semua Barcode
+                                    </button>
+                                    <button onclick="cetakBarcodeSelected()" class="btn btn-primary btn-sm">
+                                        <i class="fa fa-print"></i> Cetak Barcode Terpilih
+                                    </button>
+                                    <button onclick="downloadSemuaBarcode()" class="btn btn-info btn-sm">
+                                        <i class="fa fa-download"></i> Download Semua
                                     </button>
                                 </div>
-                                <small class="text-muted">Maksimal 50 label per sekali cetak</small>
+                                <small class="text-muted">Pilih unit yang ingin dicetak dengan mencentang checkbox</small>
                             </div>
                         </div>
                     </div>
@@ -327,58 +336,150 @@
     </div>
 </div>
 
-<!-- Hidden div untuk template cetak -->
-<div id="templateCetak" style="display: none;">
-    <div id="contentCetak"></div>
-</div>
-
 <script>
+let currentBookUnits = [];
+
 function tambahBuku() {
     $('#modalTambahBuku').modal('show');
 }
 
-function lihatBarcode(isbn, judul, pengarang) {
+function lihatBarcodeUnits(id_buku, judul, pengarang, isbn) {
     // Set informasi buku
-    document.getElementById('bukuJudul').textContent = judul;
-    document.getElementById('bukuPengarang').textContent = pengarang;
-    document.getElementById('bukuISBN').textContent = isbn;
-    document.getElementById('barcodeNumber').textContent = isbn;
+    document.getElementById('bukuJudulUnits').textContent = judul;
+    document.getElementById('bukuPengarangUnits').textContent = pengarang;
+    document.getElementById('bukuISBNUnits').textContent = isbn;
     
-    // Generate barcode image
-    const barcodeUrl = `https://barcode.tec-it.com/barcode.ashx?data=${isbn}&code=Code128&translate-esc=true&width=300&height=80`;
-    document.getElementById('barcodeImage').src = barcodeUrl;
-    
-    // Show modal
-    $('#modalBarcodeBuku').modal('show');
+    // Fetch units data via AJAX
+    fetch(`pages/function/Buku.php?act=get_units&id_buku=${id_buku}`)
+        .then(response => response.json())
+        .then(data => {
+            currentBookUnits = data;
+            document.getElementById('totalUnits').textContent = data.length;
+            
+            // Generate barcode units display
+            generateBarcodeUnitsDisplay(data, judul);
+            
+            // Show modal
+            $('#modalBarcodeUnits').modal('show');
+        })
+        .catch(error => {
+            console.error('Error fetching units:', error);
+            alert('Gagal memuat data units buku');
+        });
 }
 
-function cetakBarcode() {
-    const isbn = document.getElementById('bukuISBN').textContent;
-    const judul = document.getElementById('bukuJudul').textContent;
-    const pengarang = document.getElementById('bukuPengarang').textContent;
+function generateBarcodeUnitsDisplay(units, judul) {
+    const container = document.getElementById('barcodeUnitsContainer');
+    container.innerHTML = '';
     
-    cetakLabel(isbn, judul, pengarang, 1);
-}
-
-function cetakMultipleLabel() {
-    const jumlah = document.getElementById('jumlahLabel').value;
-    const isbn = document.getElementById('bukuISBN').textContent;
-    const judul = document.getElementById('bukuJudul').textContent;
-    const pengarang = document.getElementById('bukuPengarang').textContent;
-    
-    if (jumlah < 1 || jumlah > 50) {
-        alert('Jumlah label harus antara 1-50');
+    if (units.length === 0) {
+        container.innerHTML = '<p class="text-center">Tidak ada unit buku tersedia</p>';
         return;
     }
     
-    cetakLabel(isbn, judul, pengarang, parseInt(jumlah));
+    units.forEach((unit, index) => {
+        const unitDiv = document.createElement('div');
+        unitDiv.className = 'barcode-unit-item';
+        unitDiv.style.cssText = `
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            padding: 15px; 
+            margin-bottom: 10px; 
+            background-color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        `;
+        
+        const statusColor = unit.status === 'tersedia' ? '#28a745' : '#dc3545';
+        const kondisiColor = unit.kondisi === 'baik' ? '#007bff' : '#ffc107';
+        
+        unitDiv.innerHTML = `
+            <div style="display: flex; align-items: center;">
+                <input type="checkbox" class="unit-checkbox" value="${unit.barcode}" style="margin-right: 15px;">
+                <div>
+                    <h6 style="margin: 0; font-weight: bold; color: #333;">${unit.barcode}</h6>
+                    <div style="margin-top: 5px;">
+                        <span style="background-color: ${kondisiColor}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-right: 8px;">
+                            ${unit.kondisi.toUpperCase()}
+                        </span>
+                        <span style="background-color: ${statusColor}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px;">
+                            ${unit.status.toUpperCase()}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div style="text-align: center;">
+                <img src="https://barcode.tec-it.com/barcode.ashx?data=${unit.barcode}&code=Code128&translate-esc=true&width=120&height=30" 
+                     alt="Barcode ${unit.barcode}" style="display: block; margin-bottom: 8px;">
+                <div>
+                    <button onclick="cetakSingleBarcode('${unit.barcode}', '${judul}')" class="btn btn-xs btn-success" style="margin-right: 5px;">
+                        <i class="fa fa-print"></i>
+                    </button>
+                    <button onclick="downloadSingleBarcode('${unit.barcode}', '${judul}')" class="btn btn-xs btn-info">
+                        <i class="fa fa-download"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(unitDiv);
+    });
+    
+    // Add select all checkbox
+    const selectAllDiv = document.createElement('div');
+    selectAllDiv.style.cssText = 'margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 5px;';
+    selectAllDiv.innerHTML = `
+        <label style="margin: 0; font-weight: normal;">
+            <input type="checkbox" id="selectAllUnits" onchange="toggleSelectAll()" style="margin-right: 8px;">
+            Pilih Semua Units
+        </label>
+    `;
+    container.insertBefore(selectAllDiv, container.firstChild);
 }
 
-function cetakLabel(isbn, judul, pengarang, jumlah) {
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAllUnits');
+    const checkboxes = document.querySelectorAll('.unit-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+}
+
+function cetakSingleBarcode(barcode, judul) {
+    cetakBarcodeLabel([{barcode: barcode}], judul);
+}
+
+function cetakSemuaBarcode() {
+    const judul = document.getElementById('bukuJudulUnits').textContent;
+    cetakBarcodeLabel(currentBookUnits, judul);
+}
+
+function cetakBarcodeSelected() {
+    const checkedBoxes = document.querySelectorAll('.unit-checkbox:checked');
+    if (checkedBoxes.length === 0) {
+        alert('Pilih minimal satu unit untuk dicetak');
+        return;
+    }
+    
+    const selectedUnits = [];
+    checkedBoxes.forEach(checkbox => {
+        const unit = currentBookUnits.find(u => u.barcode === checkbox.value);
+        if (unit) selectedUnits.push(unit);
+    });
+    
+    const judul = document.getElementById('bukuJudulUnits').textContent;
+    cetakBarcodeLabel(selectedUnits, judul);
+}
+
+function cetakBarcodeLabel(units, judul) {
+    const pengarang = document.getElementById('bukuPengarangUnits').textContent;
+    
     let content = `
         <html>
         <head>
-            <title>Label Barcode Buku</title>
+            <title>Label Barcode Units</title>
             <style>
                 body { 
                     font-family: Arial, sans-serif; 
@@ -409,6 +510,17 @@ function cetakLabel(isbn, judul, pengarang, jumlah) {
                     width: 120px;
                     height: 25px;
                 }
+                .status-badge {
+                    font-size: 6px;
+                    padding: 1px 4px;
+                    border-radius: 8px;
+                    color: white;
+                    margin: 0 2px;
+                }
+                .kondisi-baik { background-color: #007bff; }
+                .kondisi-rusak { background-color: #ffc107; color: #000; }
+                .status-tersedia { background-color: #28a745; }
+                .status-dipinjam { background-color: #dc3545; }
                 @media print {
                     body { margin: 0; }
                     .label { 
@@ -421,19 +533,22 @@ function cetakLabel(isbn, judul, pengarang, jumlah) {
         <body>
     `;
     
-    // Generate barcode URL yang akan berfungsi saat print
-    const barcodeImageUrl = `https://barcode.tec-it.com/barcode.ashx?data=${isbn}&code=Code128&translate-esc=true&width=200&height=50&dpi=300`;
-    
-    for (let i = 0; i < jumlah; i++) {
+    units.forEach(unit => {
+        const barcodeImageUrl = `https://barcode.tec-it.com/barcode.ashx?data=${unit.barcode}&code=Code128&translate-esc=true&width=200&height=50&dpi=300`;
+        
         content += `
             <div class="label">
                 <h6>${judul && judul.length > 25 ? judul.substring(0, 25) + '...' : judul || 'Judul Tidak Tersedia'}</h6>
                 <p>Pengarang: ${pengarang || 'Tidak Diketahui'}</p>
-                <img src="${barcodeImageUrl}" alt="Barcode ${isbn}" onerror="this.alt='Barcode: ${isbn}';">
-                <p><strong>ISBN: ${isbn}</strong></p>
+                <img src="${barcodeImageUrl}" alt="Barcode ${unit.barcode}" onerror="this.alt='Barcode: ${unit.barcode}';">
+                <p><strong>${unit.barcode}</strong></p>
+                <div>
+                    <span class="status-badge kondisi-${unit.kondisi}">${unit.kondisi.toUpperCase()}</span>
+                    <span class="status-badge status-${unit.status}">${unit.status.toUpperCase()}</span>
+                </div>
             </div>
         `;
-    }
+    });
     
     content += `
         </body>
@@ -449,23 +564,30 @@ function cetakLabel(isbn, judul, pengarang, jumlah) {
         setTimeout(function() {
             printWindow.focus();
             printWindow.print();
-        }, 1000); // Delay 1 detik untuk memastikan gambar dimuat
+        }, 1000);
     };
 }
 
-function downloadBarcode() {
-    const isbn = document.getElementById('bukuISBN').textContent;
-    const judul = document.getElementById('bukuJudul').textContent;
-    
-    const barcodeUrl = `https://barcode.tec-it.com/barcode.ashx?data=${isbn}&code=Code128&translate-esc=true&width=400&height=100&format=png&download=true`;
+function downloadSingleBarcode(barcode, judul) {
+    const barcodeUrl = `https://barcode.tec-it.com/barcode.ashx?data=${barcode}&code=Code128&translate-esc=true&width=400&height=100&format=png&download=true`;
     
     const link = document.createElement('a');
     link.href = barcodeUrl;
-    link.download = `barcode_${judul.replace(/[^a-zA-Z0-9]/g, '_')}_${isbn}.png`;
+    link.download = `barcode_${judul.replace(/[^a-zA-Z0-9]/g, '_')}_${barcode}.png`;
     link.setAttribute('target', '_blank');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+}
+
+function downloadSemuaBarcode() {
+    const judul = document.getElementById('bukuJudulUnits').textContent;
+    
+    currentBookUnits.forEach((unit, index) => {
+        setTimeout(() => {
+            downloadSingleBarcode(unit.barcode, judul);
+        }, index * 500); // Delay 500ms between downloads
+    });
 }
 
 // Form validation untuk memastikan pengarang dan penerbit tidak kosong
