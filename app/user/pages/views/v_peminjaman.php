@@ -5,13 +5,40 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 include "../../config/koneksi.php";
 
-// Ambil data peminjaman untuk user yang sedang login
+// Cek apakah session tersedia dan valid
+if (!isset($_SESSION['fullname']) || empty($_SESSION['fullname'])) {
+    ?>
+    <div class="content-wrapper">
+        <section class="content-header">
+            <h1>Data Pengembalian Buku</h1>
+        </section>
+        <section class="content">
+            <div class="alert alert-danger">
+                <h4><i class="icon fa fa-ban"></i> Error!</h4>
+                Session tidak valid. Silakan login kembali.
+            </div>
+        </section>
+    </div>
+    <?php
+    return;
+}
+
+// Ambil data peminjaman untuk user yang sedang login dengan error handling
 $fullname = $_SESSION['fullname'];
-$sql = mysqli_query($koneksi, "SELECT p.*, b.kategori_buku 
+$sql = mysqli_query($koneksi, "SELECT p.*, 
+                               CASE 
+                                   WHEN b.kategori_buku IS NULL OR b.kategori_buku = '' OR b.kategori_buku = '-- Harap pilih kategori buku --' 
+                                   THEN 'Belum Dikategorikan' 
+                                   ELSE b.kategori_buku 
+                               END as kategori_buku
                                FROM peminjaman p 
                                LEFT JOIN buku b ON p.judul_buku = b.judul_buku 
                                WHERE p.nama_anggota = '$fullname' 
                                ORDER BY p.id_peminjaman DESC");
+
+if (!$sql) {
+    $sql_error = mysqli_error($koneksi);
+}
 ?>
 
 <!-- Content Wrapper. Contains page content -->
@@ -68,24 +95,49 @@ $sql = mysqli_query($koneksi, "SELECT p.*, b.kategori_buku
                             <tbody>
                                 <?php
                                 $no = 1;
-                                if (mysqli_num_rows($sql) > 0) {
+                                if (isset($sql_error)) {
+                                    // Tampilkan error jika ada masalah dengan query
+                                    ?>
+                                    <tr>
+                                        <td colspan="9" style="text-align: center; color: #d9534f; padding: 20px;">
+                                            <i class="fa fa-exclamation-triangle"></i> Error: <?= htmlspecialchars($sql_error); ?>
+                                        </td>
+                                    </tr>
+                                    <?php
+                                } elseif ($sql && mysqli_num_rows($sql) > 0) {
                                     while ($data = mysqli_fetch_array($sql)) {
-                                        // Tentukan status berdasarkan tanggal pengembalian
-                                        if (empty($data['tanggal_pengembalian'])) {
+                                        // PERBAIKAN LOGIKA: Tentukan status berdasarkan kondisi_buku_saat_dikembalikan (SAMA SEPERTI ADMIN)
+                                        if (empty($data['kondisi_buku_saat_dikembalikan'])) {
                                             $status = '<span class="label label-warning">Dipinjam</span>';
                                             $keterangan = '-';
                                             $denda = '-';
-                                            $tgl_kembali = '-';
+                                            // Tampilkan tanggal harus kembali dari tanggal_pengembalian
+                                            try {
+                                                $tgl_kembali = date('d-m-Y', strtotime(str_replace('-', '/', $data['tanggal_pengembalian'])));
+                                            } catch (Exception $e) {
+                                                $tgl_kembali = $data['tanggal_pengembalian'];
+                                            }
                                         } else {
                                             $status = '<span class="label label-success">Dikembalikan</span>';
-                                            $keterangan = !empty($data['kondisi_buku_saat_dikembalikan']) ? $data['kondisi_buku_saat_dikembalikan'] : '-';
-                                            $denda = !empty($data['denda']) ? $data['denda'] : '-';
-                                            // Format tanggal pengembalian
+                                            $keterangan = $data['kondisi_buku_saat_dikembalikan'];
+                                            
+                                            // PERBAIKAN: Validasi data denda sebelum format
+                                            if (!empty($data['denda']) && is_numeric($data['denda'])) {
+                                                $denda = 'Rp ' . number_format($data['denda'], 0, ',', '.');
+                                            } else {
+                                                $denda = 'Rp 0';
+                                            }
+                                            
+                                            // Untuk yang sudah dikembalikan, tampilkan tanggal aktual pengembalian
                                             $tgl_kembali = date('d-m-Y', strtotime(str_replace('-', '/', $data['tanggal_pengembalian'])));
                                         }
                                         
                                         // Format tanggal peminjaman
-                                        $tgl_pinjam = date('d-m-Y', strtotime(str_replace('-', '/', $data['tanggal_peminjaman'])));
+                                        try {
+                                            $tgl_pinjam = date('d-m-Y', strtotime(str_replace('-', '/', $data['tanggal_peminjaman'])));
+                                        } catch (Exception $e) {
+                                            $tgl_pinjam = $data['tanggal_peminjaman'];
+                                        }
                                         
                                         // Format nomor peminjaman
                                         $no_pinjam = sprintf("PJ%03d", $data['id_peminjaman']);
@@ -94,7 +146,17 @@ $sql = mysqli_query($koneksi, "SELECT p.*, b.kategori_buku
                                             <td><?= $no++; ?></td>
                                             <td><?= $no_pinjam; ?></td>
                                             <td><?= htmlspecialchars($data['judul_buku']); ?></td>
-                                            <td><?= !empty($data['kategori_buku']) ? htmlspecialchars($data['kategori_buku']) : '-'; ?></td>
+                                            <td>
+                                                <?php 
+                                                // PERBAIKAN: Handle kategori yang tidak valid
+                                                $kategori = $data['kategori_buku'];
+                                                if (empty($kategori) || $kategori == '-- Harap pilih kategori buku --') {
+                                                    echo '<span style="color: #999; font-style: italic;">Belum Dikategorikan</span>';
+                                                } else {
+                                                    echo htmlspecialchars($kategori);
+                                                }
+                                                ?>
+                                            </td>
                                             <td><?= $tgl_pinjam; ?></td>
                                             <td><?= $tgl_kembali; ?></td>
                                             <td style="text-align: center;"><?= $status; ?></td>
@@ -106,7 +168,7 @@ $sql = mysqli_query($koneksi, "SELECT p.*, b.kategori_buku
                                 } else {
                                 ?>
                                     <tr>
-                                        <td colspan="9" style="text-align: center; color: #999; font-style: italic;">
+                                        <td colspan="9" style="text-align: center; color: #999; font-style: italic; padding: 20px;">
                                             <i class="fa fa-info-circle"></i> Belum ada data peminjaman
                                         </td>
                                     </tr>

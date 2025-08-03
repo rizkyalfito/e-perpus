@@ -553,7 +553,7 @@ $('#searchPeminjaman').on('keypress', function(e) {
     }
 });
 
-// Form submissions
+// Form submissions - FIXED WITH AJAX
 $('#formPengembalian').on('submit', function(e) {
     e.preventDefault();
     
@@ -574,8 +574,42 @@ $('#formPengembalian').on('submit', function(e) {
         }
     }).then((willReturn) => {
         if (willReturn) {
-            // Submit form
-            this.submit();
+            // Submit form via AJAX
+            const formData = new FormData(this);
+            
+            $.ajax({
+                url: $(this).attr('action'),
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        swal({
+                            icon: 'success',
+                            title: 'Berhasil',
+                            text: response.message
+                        }).then(() => {
+                            $('#modalKonfirmasiKembali').modal('hide');
+                            loadPeminjaman($('#searchPeminjaman').val());
+                        });
+                    } else {
+                        swal({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: response.message
+                        });
+                    }
+                },
+                error: function() {
+                    swal({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Terjadi kesalahan saat memproses pengembalian'
+                    });
+                }
+            });
         }
     });
 });
@@ -600,8 +634,42 @@ $('#formPerpanjangan').on('submit', function(e) {
         }
     }).then((willExtend) => {
         if (willExtend) {
-            // Submit form
-            this.submit();
+            // Submit form via AJAX
+            const formData = new FormData(this);
+            
+            $.ajax({
+                url: $(this).attr('action'),
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        swal({
+                            icon: 'success',
+                            title: 'Berhasil',
+                            text: response.message
+                        }).then(() => {
+                            $('#modalPerpanjangan').modal('hide');
+                            loadPeminjaman($('#searchPeminjaman').val());
+                        });
+                    } else {
+                        swal({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: response.message
+                        });
+                    }
+                },
+                error: function() {
+                    swal({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Terjadi kesalahan saat memproses perpanjangan'
+                    });
+                }
+            });
         }
     });
 });

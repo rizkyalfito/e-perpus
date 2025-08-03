@@ -138,9 +138,19 @@ if (isset($_GET['aksi'])) {
         mysqli_autocommit($koneksi, FALSE);
         
         try {
-            // Insert peminjaman
-            $sql_pinjam = "INSERT INTO peminjaman (nama_anggota, judul_buku, tanggal_peminjaman, tanggal_pengembalian, kondisi_buku_saat_dipinjam, kondisi_buku_saat_dikembalikan, denda) 
-                          VALUES ('$nama_anggota', '$judul_buku', '$tanggal_pinjam', '$tanggal_kembali', '$kondisi_buku', '', '0')";
+            // Cek apakah kolom barcode_buku exists di tabel peminjaman
+            $check_column = mysqli_query($koneksi, "SHOW COLUMNS FROM peminjaman LIKE 'barcode_buku'");
+            $has_barcode_column = mysqli_num_rows($check_column) > 0;
+            
+            if ($has_barcode_column) {
+                // Insert peminjaman dengan menyimpan barcode
+                $sql_pinjam = "INSERT INTO peminjaman (nama_anggota, judul_buku, tanggal_peminjaman, tanggal_pengembalian, kondisi_buku_saat_dipinjam, kondisi_buku_saat_dikembalikan, denda, barcode_buku) 
+                              VALUES ('$nama_anggota', '$judul_buku', '$tanggal_pinjam', '$tanggal_kembali', '$kondisi_buku', '', '0', '$barcode')";
+            } else {
+                // Insert peminjaman tanpa kolom barcode_buku
+                $sql_pinjam = "INSERT INTO peminjaman (nama_anggota, judul_buku, tanggal_peminjaman, tanggal_pengembalian, kondisi_buku_saat_dipinjam, kondisi_buku_saat_dikembalikan, denda) 
+                              VALUES ('$nama_anggota', '$judul_buku', '$tanggal_pinjam', '$tanggal_kembali', '$kondisi_buku', '', '0')";
+            }
             
             if (!mysqli_query($koneksi, $sql_pinjam)) {
                 throw new Exception("Gagal menyimpan data peminjaman");
@@ -185,7 +195,6 @@ if (isset($_GET['aksi'])) {
     
     elseif ($_GET['aksi'] == "kembali") {
         $id_peminjaman = $_POST['idPeminjaman'];
-        $tanggal_dikembalikan = date('Y-m-d');
         $kondisi_buku_kembali = $_POST['kondisiBuku'];
         $denda = isset($_POST['denda']) ? $_POST['denda'] : 0;
         
@@ -214,11 +223,28 @@ if (isset($_GET['aksi'])) {
                 throw new Exception("Gagal mengupdate data peminjaman");
             }
             
-            // Get barcode dari peminjaman untuk update status buku_unit
-            $barcode = $_POST['barcode'];
+            // PERBAIKAN: Cek apakah kolom barcode_buku exists terlebih dahulu
+            $check_column = mysqli_query($koneksi, "SHOW COLUMNS FROM peminjaman LIKE 'barcode_buku'");
+            $has_barcode_column = mysqli_num_rows($check_column) > 0;
             
+            $barcode = null;
+            if ($has_barcode_column && isset($data_pinjam['barcode_buku']) && !empty($data_pinjam['barcode_buku'])) {
+                $barcode = $data_pinjam['barcode_buku'];
+            } else {
+                // Fallback: Cari barcode dari buku_unit yang statusnya dipinjam untuk buku ini
+                $query_barcode = mysqli_query($koneksi, "SELECT bu.barcode FROM buku_unit bu 
+                                                        JOIN buku b ON bu.id_buku = b.id_buku 
+                                                        WHERE b.judul_buku = '".$data_pinjam['judul_buku']."' 
+                                                        AND bu.status = 'dipinjam' 
+                                                        LIMIT 1");
+                if ($query_barcode && mysqli_num_rows($query_barcode) > 0) {
+                    $barcode_data = mysqli_fetch_assoc($query_barcode);
+                    $barcode = $barcode_data['barcode'];
+                }
+            }
+            
+            // Update status buku_unit jika barcode ditemukan
             if ($barcode) {
-                // Update status buku_unit menjadi tersedia
                 $sql_update_unit = "UPDATE buku_unit SET status = 'tersedia' WHERE barcode = '$barcode'";
                 if (!mysqli_query($koneksi, $sql_update_unit)) {
                     throw new Exception("Gagal mengupdate status buku unit");
@@ -296,16 +322,26 @@ if (isset($_GET['aksi'])) {
                 throw new Exception("Data peminjaman tidak ditemukan");
             }
             
-            // Jika belum dikembalikan, kembalikan stok
+            // Jika belum dikembalikan, kembalikan status buku unit
             if (empty($data_pinjam['kondisi_buku_saat_dikembalikan'])) {
-                $query_buku = mysqli_query($koneksi, "SELECT isbn FROM buku WHERE judul_buku = '".$data_pinjam['judul_buku']."'");
-                $data_buku = mysqli_fetch_assoc($query_buku);
+                // Cek apakah kolom barcode_buku exists
+                $check_column = mysqli_query($koneksi, "SHOW COLUMNS FROM peminjaman LIKE 'barcode_buku'");
+                $has_barcode_column = mysqli_num_rows($check_column) > 0;
                 
-                if ($data_buku) {
-                    $sql_update_stok = "UPDATE buku SET j_buku_baik = j_buku_baik + 1 WHERE isbn = '".$data_buku['isbn']."'";
-                    if (!mysqli_query($koneksi, $sql_update_stok)) {
-                        throw new Exception("Gagal mengembalikan stok buku");
+                if ($has_barcode_column && isset($data_pinjam['barcode_buku']) && !empty($data_pinjam['barcode_buku'])) {
+                    $sql_update_unit = "UPDATE buku_unit SET status = 'tersedia' WHERE barcode = '".$data_pinjam['barcode_buku']."'";
+                    if (!mysqli_query($koneksi, $sql_update_unit)) {
+                        throw new Exception("Gagal mengembalikan status buku unit");
                     }
+                } else {
+                    // Fallback: Cari dan update berdasarkan judul buku
+                    $sql_update_unit = "UPDATE buku_unit bu 
+                                       JOIN buku b ON bu.id_buku = b.id_buku 
+                                       SET bu.status = 'tersedia' 
+                                       WHERE b.judul_buku = '".$data_pinjam['judul_buku']."' 
+                                       AND bu.status = 'dipinjam' 
+                                       LIMIT 1";
+                    mysqli_query($koneksi, $sql_update_unit); // Don't throw error if this fails
                 }
             }
             
