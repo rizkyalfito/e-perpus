@@ -294,6 +294,66 @@ ALTER TABLE `user`
   MODIFY `id_user` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 COMMIT;
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `kurikulum`
+--
+
+CREATE TABLE `kurikulum` (
+  `id_kurikulum` int(11) NOT NULL,
+  `kode_kurikulum` varchar(50) NOT NULL,
+  `nama_kurikulum` varchar(125) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Indexes for table `kurikulum`
+--
+ALTER TABLE `kurikulum`
+  ADD PRIMARY KEY (`id_kurikulum`);
+
+--
+-- AUTO_INCREMENT for table `kurikulum`
+--
+ALTER TABLE `kurikulum`
+  MODIFY `id_kurikulum` int(11) NOT NULL AUTO_INCREMENT;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `buku_kurikulum`
+--
+
+CREATE TABLE `buku_kurikulum` (
+  `id_buku_kurikulum` int(11) NOT NULL,
+  `id_buku` int(11) NOT NULL,
+  `id_kurikulum` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Indexes for table `buku_kurikulum`
+--
+ALTER TABLE `buku_kurikulum`
+  ADD PRIMARY KEY (`id_buku_kurikulum`),
+  ADD KEY `id_buku` (`id_buku`),
+  ADD KEY `id_kurikulum` (`id_kurikulum`);
+
+--
+-- AUTO_INCREMENT for table `buku_kurikulum`
+--
+ALTER TABLE `buku_kurikulum`
+  MODIFY `id_buku_kurikulum` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- Constraints for table `buku_kurikulum`
+--
+ALTER TABLE `buku_kurikulum`
+  ADD CONSTRAINT `buku_kurikulum_ibfk_1` FOREIGN KEY (`id_buku`) REFERENCES `buku` (`id_buku`) ON DELETE CASCADE,
+  ADD CONSTRAINT `buku_kurikulum_ibfk_2` FOREIGN KEY (`id_kurikulum`) REFERENCES `kurikulum` (`id_kurikulum`) ON DELETE CASCADE;
+COMMIT;
+
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

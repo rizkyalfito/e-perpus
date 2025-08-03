@@ -44,6 +44,7 @@
                     <ul class="treeview-menu">
                         <li><a href="data-buku"><i class="fa fa-circle-o"></i> Data Buku</a></li>
                         <li><a href="kategori-buku"><i class="fa fa-circle-o"></i> Kategori Buku</a></li>
+                        <li><a href="kurikulum"><i class="fa fa-circle-o"></i> Kurikulum</a></li>
                     </ul>
             </li>
             <li class="treeview">
