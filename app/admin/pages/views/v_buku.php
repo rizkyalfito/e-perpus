@@ -349,22 +349,58 @@ function lihatBarcodeUnits(id_buku, judul, pengarang, isbn) {
     document.getElementById('bukuPengarangUnits').textContent = pengarang;
     document.getElementById('bukuISBNUnits').textContent = isbn;
     
+    // Show loading
+    document.getElementById('barcodeUnitsContainer').innerHTML = '<div class="text-center"><i class="fa fa-spinner fa-spin"></i> Memuat data units...</div>';
+    $('#modalBarcodeUnits').modal('show');
+    
     // Fetch units data via AJAX
     fetch(`pages/function/Buku.php?act=get_units&id_buku=${id_buku}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('Units data received:', data);
+            
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
             currentBookUnits = data;
             document.getElementById('totalUnits').textContent = data.length;
             
             // Generate barcode units display
             generateBarcodeUnitsDisplay(data, judul);
-            
-            // Show modal
-            $('#modalBarcodeUnits').modal('show');
         })
         .catch(error => {
             console.error('Error fetching units:', error);
-            alert('Gagal memuat data units buku');
+            
+            // Show error message dengan opsi migrasi
+            document.getElementById('barcodeUnitsContainer').innerHTML = `
+                <div class="alert alert-warning">
+                    <h5><i class="fa fa-exclamation-triangle"></i> Data Units Tidak Ditemukan</h5>
+                    <p>Buku ini belum memiliki data units barcode. Hal ini terjadi karena buku ditambahkan sebelum sistem barcode per unit diimplementasikan.</p>
+                    <hr>
+                    <p><strong>Solusi:</strong></p>
+                    <ol>
+                        <li>Jalankan script migrasi untuk membuat units dari data buku existing</li>
+                        <li>Atau edit buku ini untuk regenerate units</li>
+                    </ol>
+                    <div style="margin-top: 15px;">
+                        <a href="pages/function/migrate_existing_books.php" target="_blank" class="btn btn-primary btn-sm">
+                            <i class="fa fa-database"></i> Jalankan Migrasi
+                        </a>
+                        <button onclick="regenerateUnitsForBook(${id_buku})" class="btn btn-success btn-sm">
+                            <i class="fa fa-refresh"></i> Regenerate Units Buku Ini
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('totalUnits').textContent = '0';
+            currentBookUnits = [];
         });
 }
 
@@ -587,6 +623,37 @@ function downloadSemuaBarcode() {
         setTimeout(() => {
             downloadSingleBarcode(unit.barcode, judul);
         }, index * 500); // Delay 500ms between downloads
+    });
+}
+
+function regenerateUnitsForBook(id_buku) {
+    if (!confirm('Regenerate units untuk buku ini? Ini akan menghapus semua units existing (jika ada) dan membuat yang baru berdasarkan jumlah buku.')) {
+        return;
+    }
+    
+    // Show loading
+    document.getElementById('barcodeUnitsContainer').innerHTML = '<div class="text-center"><i class="fa fa-spinner fa-spin"></i> Regenerating units...</div>';
+    
+    fetch(`pages/function/Buku.php?act=regenerate_units&id_buku=${id_buku}`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Units berhasil di-regenerate!');
+            // Reload units data
+            lihatBarcodeUnits(id_buku, 
+                document.getElementById('bukuJudulUnits').textContent,
+                document.getElementById('bukuPengarangUnits').textContent,
+                document.getElementById('bukuISBNUnits').textContent
+            );
+        } else {
+            alert('Error: ' + (data.error || 'Gagal regenerate units'));
+        }
+    })
+    .catch(error => {
+        console.error('Error regenerating units:', error);
+        alert('Gagal regenerate units');
     });
 }
 
