@@ -84,9 +84,9 @@
                                 <!-- Data Buku -->
                                 <div class="col-md-8">
                                     <div class="form-group">
-                                        <label>ISBN Buku</label>
+<label>Barcode Buku</label>
                                         <div class="input-group">
-                                            <input type="text" class="form-control" id="isbnBuku" name="isbn" placeholder="Masukkan ISBN (contoh: 978-0-12-345678-9) atau scan barcode">
+                                            <input type="text" class="form-control" id="isbnBuku" name="isbn" placeholder="Masukkan ISBN atau Barcode Unit buku, atau scan barcode">
                                             <span class="input-group-btn">
                                                 <button type="button" class="btn btn-primary" onclick="scanBukuBarcode()">
                                                     <i class="fa fa-qrcode"></i> Scan
@@ -116,7 +116,6 @@
                                             <div class="col-md-3"><strong>Kategori:</strong> <span id="displayKategori"></span></div>
                                             <div class="col-md-3"><strong>Pengarang:</strong> <span id="displayPengarang"></span></div>
                                             <div class="col-md-3"><strong>Penerbit:</strong> <span id="displayPenerbit"></span></div>
-                                            <div class="col-md-3"><strong>Stok Tersedia:</strong> <span id="displayStok"></span> buah</div>
                                         </div>
                                     </div>
                                 </div>
@@ -405,9 +404,9 @@ function scanBukuBarcode() {
                     (decodedText, decodedResult) => {
                         showScanStatus('buku', 'success', 'Barcode berhasil terbaca, mencari data buku...');
                         showNotification('scan_success', 'Scan Berhasil', 'Barcode buku berhasil terbaca, mencari data...');
-                        const formattedISBN = formatISBN(decodedText);
-                        $('#isbnBuku').val(formattedISBN);
-                        cariBuku(formattedISBN);
+                        // Send raw decodedText without formatting
+                        $('#isbnBuku').val(decodedText);
+                        cariBuku(decodedText);
                         html5QrCodeBuku.stop();
                         setTimeout(() => {
                             $('#modalScanBuku').modal('hide');

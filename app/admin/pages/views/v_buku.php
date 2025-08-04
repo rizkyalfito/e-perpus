@@ -133,18 +133,8 @@
                                                         </div>
                                                         <div class="form-group">
                                                             <label>Penerbit Buku <small style="color: red;">* Wajib diisi</small></label>
-                                                            <select class="form-control select2" name="penerbitBuku" required>
-                                                                <option selected value="<?= $row['penerbit_buku']; ?>"><?= $row['penerbit_buku']; ?> ( Dipilih Sebelumnya )</option>
-                                                                <?php
-                                                                include "../../config/koneksi.php";
-                                                                $sql = mysqli_query($koneksi, "SELECT * FROM penerbit");
-                                                                while ($data = mysqli_fetch_array($sql)) {
-                                                                ?>
-                                                                    <option value="<?= $data['nama_penerbit']; ?>"><?= $data['nama_penerbit']; ?> ( <?= $data['verif_penerbit']; ?> )</option>
-                                                                <?php
-                                                                }
-                                                                ?>
-                                                            </select>
+                                                            <input type="text" class="form-control" placeholder="Masukkan nama penerbit" name="penerbitBuku" required>
+                                                            <small class="text-muted">Contoh: Gramedia Pustaka Utama, Mizan, Erlangga, dll.</small>
                                                         </div>
                                                         <div class="form-group">
                                                             <label>Pengarang <small style="color: red;">* Wajib diisi</small></label>
