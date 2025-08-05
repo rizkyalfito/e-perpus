@@ -132,6 +132,7 @@ if (isset($_GET['act']) && $_GET['act'] == "regenerate_units") {
 if ($_GET['act'] == "tambah") {
     $judul_buku = $_POST['judulBuku'];
     $kategori_buku = $_POST['kategoriBuku'];
+    $klasifikasi_buku = isset($_POST['klasifikasiBuku']) ? $_POST['klasifikasiBuku'] : '';
     $penerbit_buku = $_POST['penerbitBuku'];
     $pengarang = $_POST['pengarang'];
     $tahun_terbit = $_POST['tahunTerbit'];
@@ -143,9 +144,9 @@ if ($_GET['act'] == "tambah") {
     mysqli_autocommit($koneksi, FALSE);
 
     try {
-        // Insert buku
-        $sql = "INSERT INTO buku(judul_buku,kategori_buku,penerbit_buku,pengarang,tahun_terbit,isbn,j_buku_baik,j_buku_rusak)
-            VALUES('" . $judul_buku . "','" . $kategori_buku . "','" . $penerbit_buku . "','" . $pengarang . "','" . $tahun_terbit . "','" . $isbn . "', '" . $j_buku_baik . "', '" . $j_buku_rusak . "')";
+        // Insert buku dengan klasifikasi
+        $sql = "INSERT INTO buku(judul_buku,kategori_buku,klasifikasi_buku,penerbit_buku,pengarang,tahun_terbit,isbn,j_buku_baik,j_buku_rusak)
+            VALUES('" . $judul_buku . "','" . $kategori_buku . "','" . $klasifikasi_buku . "','" . $penerbit_buku . "','" . $pengarang . "','" . $tahun_terbit . "','" . $isbn . "', '" . $j_buku_baik . "', '" . $j_buku_rusak . "')";
         if (!mysqli_query($koneksi, $sql)) {
             throw new Exception("Gagal menambahkan data buku");
         }
@@ -193,6 +194,7 @@ if ($_GET['act'] == "tambah") {
     $id_buku = $_POST['id_buku'];
     $judul_buku = $_POST['judulBuku'];
     $kategori_buku = $_POST['kategoriBuku'];
+    $klasifikasi_buku = isset($_POST['klasifikasiBuku']) ? $_POST['klasifikasiBuku'] : '';
     $penerbit_buku = $_POST['penerbitBuku'];
     $pengarang = $_POST['pengarang'];
     $tahun_terbit = $_POST['tahunTerbit'];
@@ -210,8 +212,8 @@ if ($_GET['act'] == "tambah") {
         $current_baik = intval($current_data['j_buku_baik']);
         $current_rusak = intval($current_data['j_buku_rusak']);
 
-        // Update buku data
-        $query = "UPDATE buku SET judul_buku = '$judul_buku', kategori_buku = '$kategori_buku', penerbit_buku = '$penerbit_buku', 
+        // Update buku data dengan klasifikasi
+        $query = "UPDATE buku SET judul_buku = '$judul_buku', kategori_buku = '$kategori_buku', klasifikasi_buku = '$klasifikasi_buku', penerbit_buku = '$penerbit_buku', 
                     pengarang = '$pengarang', tahun_terbit = '$tahun_terbit', isbn = '$isbn', j_buku_baik = '$j_buku_baik', j_buku_rusak = '$j_buku_rusak'
                   WHERE id_buku = $id_buku";
 

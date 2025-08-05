@@ -38,72 +38,146 @@
                     </div>
                     <!-- /.box-header -->
                     <!-- Ganti dari baris <div class="box-body table-responsive"> sampai </table> -->
-<div class="box-body table-responsive">
-    <table id="example1" class="table table-bordered table-striped">
-        <thead>
-            <tr>
-                <th>No</th>
-                <th>Judul Buku</th>
-                <th>Pengarang</th>
-                <th>Penerbit</th>
-                <th>Buku Baik</th>
-                <th>Buku Rusak</th>
-                <th>Jumlah Buku</th>
-                <th>Barcode Units</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php
-            include "../../config/koneksi.php";
+                    <div class="box-body table-responsive">
+                        <table id="example1" class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Judul Buku</th>
+                                    <th>Klasifikasi</th>
+                                    <th>Pengarang</th>
+                                    <th>Penerbit</th>
+                                    <th>Buku Baik</th>
+                                    <th>Buku Rusak</th>
+                                    <th>Jumlah Buku</th>
+                                    <th>Barcode Units</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                include "../../config/koneksi.php";
 
-            $no = 1;
-            $query = mysqli_query($koneksi, "SELECT * FROM buku");
-            while ($row = mysqli_fetch_assoc($query)) {
-                $unit_query = mysqli_query($koneksi, "SELECT barcode, kondisi, status FROM buku_unit WHERE id_buku = " . $row['id_buku']);
-                $units = [];
-                while ($unit = mysqli_fetch_assoc($unit_query)) {
-                    $units[] = $unit;
-                }
-            ?>
-                <tr>
-                    <td><?= $no++; ?></td>
-                    <td><?= $row['judul_buku']; ?></td>
-                    <td><?= $row['pengarang']; ?></td>
-                    <td><?= $row['penerbit_buku']; ?></td>
-                    <td><?= $row['j_buku_baik']; ?></td>
-                    <td><?= $row['j_buku_rusak']; ?></td>
-                    <td><?php echo $row['j_buku_rusak'] + $row['j_buku_baik']; ?></td>
-                    <td>
-                        <?php if (count($units) > 0): ?>
-                        <ul style="list-style-type:none; padding-left: 0; max-height: 150px; overflow-y: auto; margin: 0;">
-                            <?php foreach ($units as $unit) : ?>
-                                <li style="font-size: 12px; line-height: 1.2; margin-bottom: 2px;">
-                                    <strong><?= htmlspecialchars($unit['barcode']); ?></strong> - 
-                                    <?= ucfirst(htmlspecialchars($unit['kondisi'])); ?> - 
-                                    <em><?= $unit['status'] == 'tersedia' ? '<span style="color:green;">Tersedia</span>' : '<span style="color:red;">Dipinjam</span>'; ?></em>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                        <?php else: ?>
-                            <span>Tidak ada unit buku</span>
-                        <?php endif; ?>
-                    </td>
-                    <td>
-                        <a href="#" onclick="lihatBarcodeUnits(<?= $row['id_buku']; ?>, '<?= addslashes($row['judul_buku']); ?>', '<?= addslashes($row['pengarang']); ?>', '<?= $row['isbn']; ?>')" class="btn btn-success btn-sm" title="Lihat Barcode Units"><i class="fa fa-barcode"></i></a>
-                        <a href="#" data-target="#modalEditBuku<?= $row['id_buku']; ?>" data-toggle="modal" class="btn btn-info btn-sm"><i class="fa fa-edit"></i></a>
-                        <a href="pages/function/Buku.php?act=hapus&id=<?= $row['id_buku']; ?>" class="btn btn-danger btn-sm btn-del"><i class="fa fa-trash"></i></a>
-                    </td>
-                </tr>
+                                $no = 1;
+                                $query = mysqli_query($koneksi, "SELECT * FROM buku");
+                                while ($row = mysqli_fetch_assoc($query)) {
+                                    $unit_query = mysqli_query($koneksi, "SELECT barcode, kondisi, status FROM buku_unit WHERE id_buku = " . $row['id_buku']);
+                                    $units = [];
+                                    while ($unit = mysqli_fetch_assoc($unit_query)) {
+                                        $units[] = $unit;
+                                    }
+                                ?>
+                                    <tr>
+                                        <td><?= $no++; ?></td>
+                                        <td><?= $row['judul_buku']; ?></td>
+                                        <td><?= !empty($row['klasifikasi_buku']) ? $row['klasifikasi_buku'] : '<em>Belum Diklasifikasi</em>'; ?></td>
+                                        <td><?= $row['pengarang']; ?></td>
+                                        <td><?= $row['penerbit_buku']; ?></td>
+                                        <td><?= $row['j_buku_baik']; ?></td>
+                                        <td><?= $row['j_buku_rusak']; ?></td>
+                                        <td><?php echo $row['j_buku_rusak'] + $row['j_buku_baik']; ?></td>
+                                        <td>
+                                            <?php if (count($units) > 0): ?>
+                                            <ul style="list-style-type:none; padding-left: 0; max-height: 150px; overflow-y: auto; margin: 0;">
+                                                <?php foreach ($units as $unit) : ?>
+                                                    <li style="font-size: 12px; line-height: 1.2; margin-bottom: 2px;">
+                                                        <strong><?= htmlspecialchars($unit['barcode']); ?></strong> - 
+                                                        <?= ucfirst(htmlspecialchars($unit['kondisi'])); ?> - 
+                                                        <em><?= $unit['status'] == 'tersedia' ? '<span style="color:green;">Tersedia</span>' : '<span style="color:red;">Dipinjam</span>'; ?></em>
+                                                    </li>
+                                                <?php endforeach; ?>
+                                            </ul>
+                                            <?php else: ?>
+                                                <span>Tidak ada unit buku</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <a href="#" onclick="lihatBarcodeUnits(<?= $row['id_buku']; ?>, '<?= addslashes($row['judul_buku']); ?>', '<?= addslashes($row['pengarang']); ?>', '<?= $row['isbn']; ?>')" class="btn btn-success btn-sm" title="Lihat Barcode Units"><i class="fa fa-barcode"></i></a>
+                                            <a href="#" data-target="#modalEditBuku<?= $row['id_buku']; ?>" data-toggle="modal" class="btn btn-info btn-sm"><i class="fa fa-edit"></i></a>
+                                            <a href="pages/function/Buku.php?act=hapus&id=<?= $row['id_buku']; ?>" class="btn btn-danger btn-sm btn-del"><i class="fa fa-trash"></i></a>
+                                        </td>
+                                    </tr>
 
-                <!-- Modal Edit tetap di sini seperti semula -->
-                <div class="modal fade" id="modalEditBuku<?= $row['id_buku']; ?>">
-                    <!-- Modal content sama seperti sebelumnya -->
-                </div>
-            <?php } ?>
-        </tbody>
-    </table>
-</div>
+                                    <!-- Modal Edit dengan Klasifikasi -->
+                                    <div class="modal fade" id="modalEditBuku<?= $row['id_buku']; ?>">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content" style="border-radius: 5px;">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span></button>
+                                                    <h4 class="modal-title" style="font-family: 'Quicksand', sans-serif; font-weight: bold;">Edit Buku</h4>
+                                                </div>
+                                                <form action="pages/function/Buku.php?act=edit" enctype="multipart/form-data" method="POST">
+                                                    <div class="modal-body">
+                                                        <input type="hidden" name="id_buku" value="<?= $row['id_buku']; ?>">
+                                                        
+                                                        <div class="form-group">
+                                                            <label>Judul Buku <small style="color: red;">* Wajib diisi</small></label>
+                                                            <input type="text" class="form-control" value="<?= $row['judul_buku']; ?>" name="judulBuku" required>
+                                                        </div>
+                                                        
+                                                        <div class="form-group">
+                                                            <label>Kategori Buku <small style="color: red;">* Wajib diisi</small></label>
+                                                            <select class="form-control" name="kategoriBuku" required>
+                                                                <option value="" disabled>-- Pilih kategori buku --</option>
+                                                                <?php
+                                                                $sql_kategori = mysqli_query($koneksi, "SELECT * FROM kategori");
+                                                                while ($data_kategori = mysqli_fetch_array($sql_kategori)) {
+                                                                    $selected = ($data_kategori['nama_kategori'] == $row['kategori_buku']) ? 'selected' : '';
+                                                                    echo "<option value='{$data_kategori['nama_kategori']}' {$selected}>{$data_kategori['nama_kategori']}</option>";
+                                                                }
+                                                                ?>
+                                                            </select>
+                                                        </div>
+                                                        
+                                                        <div class="form-group">
+                                                            <label>Klasifikasi Buku</label>
+                                                            <input type="text" class="form-control" placeholder="Masukkan klasifikasi buku (contoh: 001.1, 300.2, dll)" name="klasifikasiBuku" value="<?= $row['klasifikasi_buku']; ?>">
+                                                            <small class="text-muted">Klasifikasi menggunakan sistem Dewey Decimal atau sistem lainnya</small>
+                                                        </div>
+                                                        
+                                                        <div class="form-group">
+                                                            <label>Penerbit Buku <small style="color: red;">* Wajib diisi</small></label>
+                                                            <input type="text" class="form-control" value="<?= $row['penerbit_buku']; ?>" name="penerbitBuku" required>
+                                                        </div>
+                                                        
+                                                        <div class="form-group">
+                                                            <label>Pengarang <small style="color: red;">* Wajib diisi</small></label>
+                                                            <input type="text" class="form-control" value="<?= $row['pengarang']; ?>" name="pengarang" required>
+                                                        </div>
+                                                        
+                                                        <div class="form-group">
+                                                            <label>Tahun Terbit <small style="color: red;">* Wajib diisi</small></label>
+                                                            <input type="number" min="1900" max="<?= date('Y') + 5; ?>" class="form-control" value="<?= $row['tahun_terbit']; ?>" name="tahunTerbit" required>
+                                                        </div>
+                                                        
+                                                        <div class="form-group">
+                                                            <label>ISBN <small style="color: red;">* Wajib diisi</small></label>
+                                                            <input type="text" class="form-control" value="<?= $row['isbn']; ?>" name="iSbn" required>
+                                                        </div>
+                                                        
+                                                        <div class="form-group">
+                                                            <label>Jumlah Buku Baik <small style="color: red;">* Wajib diisi</small></label>
+                                                            <input type="number" min="0" class="form-control" value="<?= $row['j_buku_baik']; ?>" name="jumlahBukuBaik" required>
+                                                        </div>
+                                                        
+                                                        <div class="form-group">
+                                                            <label>Jumlah Buku Rusak <small style="color: red;">* Wajib diisi</small></label>
+                                                            <input type="number" min="0" class="form-control" value="<?= $row['j_buku_rusak']; ?>" name="jumlahBukuRusak" required>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+                                                        <button type="submit" class="btn btn-primary">Update</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php } ?>
+                            </tbody>
+                        </table>
+                    </div>
                     </div>
                     <!-- /.box-body -->
                 </div>
@@ -131,6 +205,7 @@
                         <label>Judul Buku <small style="color: red;">* Wajib diisi</small></label>
                         <input type="text" class="form-control" placeholder="Masukkan judul buku" name="judulBuku" required>
                     </div>
+                    
                     <div class="form-group">
                         <label>Kategori Buku <small style="color: red;">* Wajib diisi</small></label>
                         <select class="form-control" name="kategoriBuku" required>
@@ -146,29 +221,41 @@
                             ?>
                         </select>
                     </div>
+                    
+                    <div class="form-group">
+                        <label>Klasifikasi Buku</label>
+                        <input type="text" class="form-control" placeholder="Masukkan klasifikasi buku (contoh: 001.1, 300.2, dll)" name="klasifikasiBuku">
+                        <small class="text-muted">Klasifikasi menggunakan sistem Dewey Decimal atau sistem lainnya. Opsional.</small>
+                    </div>
+                    
                     <div class="form-group">
                         <label>Penerbit Buku <small style="color: red;">* Wajib diisi</small></label>
                         <input type="text" class="form-control" placeholder="Masukkan nama penerbit" name="penerbitBuku" required>
                         <small class="text-muted">Contoh: Gramedia Pustaka Utama, Mizan, Erlangga, dll.</small>
                     </div>
+                    
                     <div class="form-group">
                         <label>Pengarang <small style="color: red;">* Wajib diisi</small></label>
                         <input type="text" class="form-control" placeholder="Masukkan nama pengarang" name="pengarang" required>
                         <small class="text-muted">Contoh: Ahmad Tohari, Pramoedya Ananta Toer, dll.</small>
                     </div>
+                    
                     <div class="form-group">
                         <label>Tahun Terbit <small style="color: red;">* Wajib diisi</small></label>
                         <input type="number" min="1900" max="<?= date('Y') + 5; ?>" class="form-control" placeholder="Contoh: <?= date('Y'); ?>" name="tahunTerbit" required>
                     </div>
+                    
                     <div class="form-group">
                         <label>ISBN <small style="color: red;">* Wajib diisi</small></label>
                         <input type="text" class="form-control" placeholder="Contoh: 978-602-8519-93-9" name="iSbn" required>
                         <small class="text-muted">Masukkan nomor ISBN lengkap dengan tanda hubung</small>
                     </div>
+                    
                     <div class="form-group">
                         <label>Jumlah Buku Baik <small style="color: red;">* Wajib diisi</small></label>
                         <input type="number" min="0" class="form-control" placeholder="Masukkan jumlah buku baik" name="jumlahBukuBaik" required>
                     </div>
+                    
                     <div class="form-group">
                         <label>Jumlah Buku Rusak <small style="color: red;">* Wajib diisi</small></label>
                         <input type="number" min="0" class="form-control" placeholder="Masukkan jumlah buku rusak" name="jumlahBukuRusak" required>
