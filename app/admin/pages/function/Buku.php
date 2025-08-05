@@ -2,6 +2,56 @@
 session_start();
 include "../../../../config/koneksi.php";
 
+// Function untuk upload foto sampul
+function uploadFotoSampul($file, $id_buku) {
+    $targetDir = "../../assets/img/covers/";
+    
+    // Buat folder jika belum ada
+    if (!file_exists($targetDir)) {
+        mkdir($targetDir, 0777, true);
+    }
+    
+    $fileExtension = strtolower(pathinfo($file["name"], PATHINFO_EXTENSION));
+    $fileName = "cover_" . $id_buku . "_" . time() . "." . $fileExtension;
+    $targetFile = $targetDir . $fileName;
+    
+    // Validasi file
+    $allowedExtensions = array("jpg", "jpeg", "png", "gif");
+    $maxFileSize = 5 * 1024 * 1024; // 5MB
+    
+    // Check if file is an actual image
+    $check = getimagesize($file["tmp_name"]);
+    if ($check === false) {
+        throw new Exception("File bukan gambar yang valid");
+    }
+    
+    // Check file size
+    if ($file["size"] > $maxFileSize) {
+        throw new Exception("Ukuran file terlalu besar. Maksimal 5MB");
+    }
+    
+    // Check file extension
+    if (!in_array($fileExtension, $allowedExtensions)) {
+        throw new Exception("Format file tidak didukung. Gunakan JPG, JPEG, PNG, atau GIF");
+    }
+    
+    if (move_uploaded_file($file["tmp_name"], $targetFile)) {
+        return $fileName;
+    } else {
+        throw new Exception("Gagal mengupload file");
+    }
+}
+
+// Function untuk hapus foto sampul lama
+function hapusFotoSampul($namaFile) {
+    if ($namaFile && $namaFile !== 'default-cover.jpeg') {
+        $filePath = "../../assets/img/covers/" . $namaFile;
+        if (file_exists($filePath)) {
+            unlink($filePath);
+        }
+    }
+}
+
 // API endpoint untuk mengambil data units
 if (isset($_GET['act']) && $_GET['act'] == "get_units") {
     $id_buku = intval($_GET['id_buku']);
@@ -145,13 +195,30 @@ if ($_GET['act'] == "tambah") {
 
     try {
         // Insert buku dengan klasifikasi
-        $sql = "INSERT INTO buku(judul_buku,kategori_buku,klasifikasi_buku,penerbit_buku,pengarang,tahun_terbit,isbn,j_buku_baik,j_buku_rusak)
-            VALUES('" . $judul_buku . "','" . $kategori_buku . "','" . $klasifikasi_buku . "','" . $penerbit_buku . "','" . $pengarang . "','" . $tahun_terbit . "','" . $isbn . "', '" . $j_buku_baik . "', '" . $j_buku_rusak . "')";
+        $sql = "INSERT INTO buku(judul_buku,kategori_buku,klasifikasi_buku,penerbit_buku,pengarang,tahun_terbit,isbn,j_buku_baik,j_buku_rusak,foto_sampul)
+            VALUES('" . $judul_buku . "','" . $kategori_buku . "','" . $klasifikasi_buku . "','" . $penerbit_buku . "','" . $pengarang . "','" . $tahun_terbit . "','" . $isbn . "', '" . $j_buku_baik . "', '" . $j_buku_rusak . "', 'default-cover.jpg')";
         if (!mysqli_query($koneksi, $sql)) {
             throw new Exception("Gagal menambahkan data buku");
         }
 
         $id_buku = mysqli_insert_id($koneksi);
+
+        // Handle foto sampul upload
+        $foto_sampul = 'default-cover.jpg';
+        if (isset($_FILES['fotoSampul']) && $_FILES['fotoSampul']['error'] == 0) {
+            try {
+                $foto_sampul = uploadFotoSampul($_FILES['fotoSampul'], $id_buku);
+                
+                // Update foto sampul di database
+                $update_foto = "UPDATE buku SET foto_sampul = '$foto_sampul' WHERE id_buku = $id_buku";
+                if (!mysqli_query($koneksi, $update_foto)) {
+                    throw new Exception("Gagal menyimpan nama file foto sampul");
+                }
+            } catch (Exception $e) {
+                // Jika upload gagal, tetap lanjutkan dengan default cover
+                // Log error atau tampilkan peringatan jika diperlukan
+            }
+        }
 
         // Generate unique barcode for each unit and insert into buku_unit
         function generateBarcode($id_buku, $index) {
@@ -206,15 +273,33 @@ if ($_GET['act'] == "tambah") {
     mysqli_autocommit($koneksi, FALSE);
 
     try {
-        // Get current unit counts
-        $current_query = mysqli_query($koneksi, "SELECT j_buku_baik, j_buku_rusak FROM buku WHERE id_buku = $id_buku");
+        // Get current data
+        $current_query = mysqli_query($koneksi, "SELECT j_buku_baik, j_buku_rusak, foto_sampul FROM buku WHERE id_buku = $id_buku");
         $current_data = mysqli_fetch_assoc($current_query);
         $current_baik = intval($current_data['j_buku_baik']);
         $current_rusak = intval($current_data['j_buku_rusak']);
+        $current_foto = $current_data['foto_sampul'];
 
-        // Update buku data dengan klasifikasi
+        // Handle foto sampul upload
+        $foto_sampul = $current_foto; // Keep current photo by default
+        if (isset($_FILES['fotoSampul']) && $_FILES['fotoSampul']['error'] == 0) {
+            try {
+                // Upload new photo
+                $new_foto = uploadFotoSampul($_FILES['fotoSampul'], $id_buku);
+                
+                // Delete old photo if not default
+                hapusFotoSampul($current_foto);
+                
+                $foto_sampul = $new_foto;
+            } catch (Exception $e) {
+                // If upload fails, keep current photo
+                // You might want to log this error
+            }
+        }
+
+        // Update buku data dengan klasifikasi dan foto sampul
         $query = "UPDATE buku SET judul_buku = '$judul_buku', kategori_buku = '$kategori_buku', klasifikasi_buku = '$klasifikasi_buku', penerbit_buku = '$penerbit_buku', 
-                    pengarang = '$pengarang', tahun_terbit = '$tahun_terbit', isbn = '$isbn', j_buku_baik = '$j_buku_baik', j_buku_rusak = '$j_buku_rusak'
+                    pengarang = '$pengarang', tahun_terbit = '$tahun_terbit', isbn = '$isbn', j_buku_baik = '$j_buku_baik', j_buku_rusak = '$j_buku_rusak', foto_sampul = '$foto_sampul'
                   WHERE id_buku = $id_buku";
 
         if (!mysqli_query($koneksi, $query)) {
@@ -325,6 +410,10 @@ if ($_GET['act'] == "tambah") {
             throw new Exception("Tidak dapat menghapus buku karena masih ada unit yang sedang dipinjam");
         }
 
+        // Get foto sampul untuk dihapus
+        $foto_query = mysqli_query($koneksi, "SELECT foto_sampul FROM buku WHERE id_buku = '$id_buku'");
+        $foto_data = mysqli_fetch_assoc($foto_query);
+        
         // Delete all units first (foreign key constraint)
         $delete_units = "DELETE FROM buku_unit WHERE id_buku = '$id_buku'";
         if (!mysqli_query($koneksi, $delete_units)) {
@@ -335,6 +424,11 @@ if ($_GET['act'] == "tambah") {
         $delete_book = "DELETE FROM buku WHERE id_buku = '$id_buku'";
         if (!mysqli_query($koneksi, $delete_book)) {
             throw new Exception("Gagal menghapus data buku");
+        }
+
+        // Hapus foto sampul jika bukan default
+        if ($foto_data && $foto_data['foto_sampul']) {
+            hapusFotoSampul($foto_data['foto_sampul']);
         }
 
         // Commit transaction

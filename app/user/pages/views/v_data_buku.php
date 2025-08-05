@@ -37,13 +37,12 @@
                                 <tr>
                                     <th>No</th>
                                     <th>Judul Buku</th>
+                                    <th>Klasifikasi</th>
+                                    <th>Sampul</th>
                                     <th>Pengarang</th>
                                     <th>Penerbit</th>
                                     <th>Buku Baik</th>
                                     <th>Buku Rusak</th>
-                                    <th>Jumlah Buku</th>
-                                </tr>
-                            </thead>
                             <tbody>
                                 <?php
                                 include "../../config/koneksi.php";
