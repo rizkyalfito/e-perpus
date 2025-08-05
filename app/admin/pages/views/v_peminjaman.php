@@ -49,14 +49,14 @@
                                     <th>Denda</th>
                                 </tr>
                             </thead>
-                            <?php
-                            include "../../config/koneksi.php";
+                            <tbody>
+                                <?php
+                                include "../../config/koneksi.php";
 
-                            $no = 1;
-                            $query = mysqli_query($koneksi, "SELECT * FROM peminjaman");
-                            while ($row = mysqli_fetch_assoc($query)) {
-                            ?>
-                                <tbody>
+                                $no = 1;
+                                $query = mysqli_query($koneksi, "SELECT * FROM peminjaman");
+                                while ($row = mysqli_fetch_assoc($query)) {
+                                ?>
                                     <tr>
                                         <td><?= $no++; ?></td>
                                         <td><?= $row['nama_anggota']; ?></td>
@@ -67,10 +67,10 @@
                                         <td><?= $row['kondisi_buku_saat_dikembalikan']; ?></td>
                                         <td><?= $row['denda']; ?></td>
                                     </tr>
-                                </tbody>
-                            <?php
-                            }
-                            ?>
+                                <?php
+                                }
+                                ?>
+                            </tbody>
                         </table>
                     </div>
                     <!-- /.box-body -->
@@ -83,9 +83,51 @@
     </section>
     <!-- /.content -->
 </div>
+
+<!-- SCRIPTS -->
 <!-- jQuery 3 -->
 <script src="../../assets/bower_components/jquery/dist/jquery.min.js"></script>
+<!-- Bootstrap 3.3.7 -->
+<script src="../../assets/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<!-- DataTables -->
+<script src="../../assets/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+<script src="../../assets/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+<!-- SweetAlert -->
 <script src="../../assets/dist/js/sweetalert.min.js"></script>
+<!-- AdminLTE App -->
+<script src="../../assets/dist/js/adminlte.min.js"></script>
+
+<!-- Initialize DataTables -->
+<script>
+    $(function () {
+        $('#example1').DataTable({
+            'paging': true,
+            'lengthChange': true,
+            'searching': true,
+            'ordering': true,
+            'info': true,
+            'autoWidth': false,
+            'responsive': true,
+            'pageLength': 10,
+            'lengthMenu': [5, 10, 25, 50, 100],
+            'language': {
+                'lengthMenu': 'Tampilkan _MENU_ data per halaman',
+                'zeroRecords': 'Data tidak ditemukan',
+                'info': 'Menampilkan halaman _PAGE_ dari _PAGES_',
+                'infoEmpty': 'Tidak ada data yang tersedia',
+                'infoFiltered': '(difilter dari _MAX_ total data)',
+                'search': 'Cari:',
+                'paginate': {
+                    'first': 'Pertama',
+                    'last': 'Terakhir',
+                    'next': 'Selanjutnya',
+                    'previous': 'Sebelumnya'
+                }
+            }
+        });
+    });
+</script>
+
 <!-- Pesan Berhasil Edit -->
 <script>
     <?php
@@ -99,6 +141,7 @@
     $_SESSION['berhasil'] = '';
     ?>
 </script>
+
 <!-- Notif Gagal -->
 <script>
     <?php
@@ -112,6 +155,7 @@
     $_SESSION['gagal'] = '';
     ?>
 </script>
+
 <!-- Swal Hapus Data -->
 <script>
     $('.btn-del').on('click', function(e) {

@@ -273,15 +273,24 @@ while ($kurikulum = mysqli_fetch_assoc($query_modal)) {
 }
 ?>
 
-<!-- Scripts -->
+<!-- SCRIPTS -->
+<!-- jQuery 3 -->
 <script src="../../assets/bower_components/jquery/dist/jquery.min.js"></script>
+<!-- Bootstrap 3.3.7 -->
+<script src="../../assets/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<!-- DataTables -->
 <script src="../../assets/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
 <script src="../../assets/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+<!-- SweetAlert -->
+<script src="../../assets/dist/js/sweetalert.min.js"></script>
+<!-- AdminLTE App -->
+<script src="../../assets/dist/js/adminlte.min.js"></script>
 
+<!-- Initialize DataTables -->
 <script>
 $(document).ready(function() {
-    // Initialize DataTable
-    if ($.fn.DataTable) {
+    // Initialize DataTable hanya jika tabel ada
+    if ($('#example1').length && $.fn.DataTable) {
         $('#example1').DataTable({
             'paging': true,
             'lengthChange': true,
@@ -290,21 +299,57 @@ $(document).ready(function() {
             'info': true,
             'autoWidth': false,
             'responsive': true,
+            'pageLength': 10,
+            'lengthMenu': [5, 10, 25, 50, 100],
+            'columnDefs': [
+                { 'orderable': false, 'targets': [0, 4] }, // Disable sorting untuk kolom No dan Aksi
+            ],
             'language': {
-                'lengthMenu': 'Tampilkan _MENU_ entri',
-                'zeroRecords': 'Tidak ada data yang ditemukan',
-                'info': 'Menampilkan _START_ sampai _END_ dari _TOTAL_ entri',
-                'infoEmpty': 'Menampilkan 0 sampai 0 dari 0 entri',
-                'infoFiltered': '(disaring dari _MAX_ total entri)',
+                'lengthMenu': 'Tampilkan _MENU_ data per halaman',
+                'zeroRecords': 'Data kurikulum tidak ditemukan',
+                'info': 'Menampilkan halaman _PAGE_ dari _PAGES_',
+                'infoEmpty': 'Tidak ada data kurikulum yang tersedia',
+                'infoFiltered': '(difilter dari _MAX_ total data)',
                 'search': 'Cari:',
                 'paginate': {
                     'first': 'Pertama',
                     'last': 'Terakhir',
                     'next': 'Selanjutnya',
                     'previous': 'Sebelumnya'
-                }
+                },
+                'emptyTable': 'Tidak ada data kurikulum dalam tabel',
+                'loadingRecords': 'Memuat...',
+                'processing': 'Sedang memproses...'
             }
         });
     }
 });
+</script>
+
+<!-- Pesan Berhasil -->
+<script>
+    <?php
+    if (isset($_SESSION['berhasil']) && $_SESSION['berhasil'] <> '') {
+        echo "swal({
+            icon: 'success',
+            title: 'Berhasil',
+            text: '$_SESSION[berhasil]'
+        })";
+    }
+    $_SESSION['berhasil'] = '';
+    ?>
+</script>
+
+<!-- Notif Gagal -->
+<script>
+    <?php
+    if (isset($_SESSION['gagal']) && $_SESSION['gagal'] <> '') {
+        echo "swal({
+                icon: 'error',
+                title: 'Gagal',
+                text: '$_SESSION[gagal]'
+              })";
+    }
+    $_SESSION['gagal'] = '';
+    ?>
 </script>

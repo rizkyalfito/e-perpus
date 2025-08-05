@@ -41,6 +41,9 @@ if (!$sql) {
 }
 ?>
 
+<!-- TAMBAHKAN CSS DATATABLES -->
+<link rel="stylesheet" href="../../assets/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css">
+
 <!-- Content Wrapper. Contains page content -->
 <div class="content-wrapper">
     <!-- Content Header (Page header) -->
@@ -77,7 +80,7 @@ if (!$sql) {
                         <h3 class="box-title" style="font-family: 'Quicksand', sans-serif; font-weight: bold;">Data Pengembalian Buku</h3>
                     </div>
                     <!-- /.box-header -->
-                    <div class="box-body table-responsive">
+                    <div class="box-body">
                         <table id="example1" class="table table-bordered table-striped">
                             <thead>
                                 <tr>
@@ -189,7 +192,11 @@ if (!$sql) {
     <!-- /.content -->
 </div>
 
-<!-- DataTables -->
+<!-- PASTIKAN JQUERY DIMUAT TERLEBIH DAHULU -->
+<!-- Jika belum ada, tambahkan: -->
+<!-- <script src="../../assets/bower_components/jquery/dist/jquery.min.js"></script> -->
+
+<!-- DataTables JavaScript -->
 <script src="../../assets/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
 <script src="../../assets/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
 
@@ -264,11 +271,6 @@ $(function () {
 
 .label-success {
     background-color: #5cb85c;
-}
-
-/* Responsive table styling */
-.table-responsive {
-    border: 1px solid #ddd;
 }
 
 /* Custom breadcrumb styling */

@@ -44,20 +44,20 @@
                                     <th>Jumlah Buku</th>
                                 </tr>
                             </thead>
-                            <?php
-                            include "../../config/koneksi.php";
+                            <tbody>
+                                <?php
+                                include "../../config/koneksi.php";
 
-                            $no = 1;
-                            $query = mysqli_query($koneksi, "SELECT * FROM buku");
-                            while ($row = mysqli_fetch_assoc($query)) {
-                                // Ambil unit buku dan barcode-nya
-                                $unit_query = mysqli_query($koneksi, "SELECT barcode, kondisi, status FROM buku_unit WHERE id_buku = " . $row['id_buku']);
-                                $units = [];
-                                while ($unit = mysqli_fetch_assoc($unit_query)) {
-                                    $units[] = $unit;
-                                }
-                            ?>
-                                <tbody>
+                                $no = 1;
+                                $query = mysqli_query($koneksi, "SELECT * FROM buku");
+                                while ($row = mysqli_fetch_assoc($query)) {
+                                    // Ambil unit buku dan barcode-nya
+                                    $unit_query = mysqli_query($koneksi, "SELECT barcode, kondisi, status FROM buku_unit WHERE id_buku = " . $row['id_buku']);
+                                    $units = [];
+                                    while ($unit = mysqli_fetch_assoc($unit_query)) {
+                                        $units[] = $unit;
+                                    }
+                                ?>
                                     <tr>
                                         <td><?= $no++; ?></td>
                                         <td><?= $row['judul_buku']; ?></td>
@@ -71,89 +71,10 @@
                                             echo $j_buku_rusak + $j_buku_baik;
                                             ?></td>
                                     </tr>
-                                    
-                                    <!-- Modal Edit -->
-                                    <div class="modal fade" id="modalEditBuku<?= $row['id_buku']; ?>">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content" style="border-radius: 5px;">
-                                                <div class="modal-header">
-                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                        <span aria-hidden="true">&times;</span></button>
-                                                    <h4 class="modal-title" style="font-family: 'Quicksand', sans-serif; font-weight: bold;">Edit Buku ( <?= $row['judul_buku']; ?> - <?= $row['pengarang']; ?> )</h4>
-                                                </div>
-                                                <form action="pages/function/Buku.php?act=edit" enctype="multipart/form-data" method="POST">
-                                                    <div class="modal-body">
-                                                        <input type="hidden" name="id_buku" value="<?= $row['id_buku']; ?>">
-                                                        <div class="form-group">
-                                                            <label>Judul Buku <small style="color: red;">* Wajib diisi</small></label>
-                                                            <input type="text" class="form-control" value="<?= $row['judul_buku']; ?>" name="judulBuku" required>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label>Kategori Buku <small style="color: red;">* Wajib diisi</small></label>
-                                                            <select class="form-control" name="kategoriBuku" required>
-                                                                <option selected value="<?= $row['kategori_buku']; ?>"><?= $row['kategori_buku']; ?> ( Dipilih Sebelumnya )</option>
-                                                                <?php
-                                                                include "../../config/koneksi.php";
-                                                                $sql = mysqli_query($koneksi, "SELECT * FROM kategori");
-                                                                while ($data = mysqli_fetch_array($sql)) {
-                                                                ?>
-                                                                    <option value="<?= $data['nama_kategori']; ?>"> <?= $data['nama_kategori']; ?></option>
-                                                                <?php
-                                                                }
-                                                                ?>
-                                                            </select>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label>Penerbit Buku <small style="color: red;">* Wajib diisi</small></label>
-                                                            <select class="form-control select2" name="penerbitBuku" required>
-                                                                <option selected value="<?= $row['penerbit_buku']; ?>"><?= $row['penerbit_buku']; ?> ( Dipilih Sebelumnya )</option>
-                                                                <?php
-                                                                include "../../config/koneksi.php";
-                                                                $sql = mysqli_query($koneksi, "SELECT * FROM penerbit");
-                                                                while ($data = mysqli_fetch_array($sql)) {
-                                                                ?>
-                                                                    <option value="<?= $data['nama_penerbit']; ?>"><?= $data['nama_penerbit']; ?> ( <?= $data['verif_penerbit']; ?> )</option>
-                                                                <?php
-                                                                }
-                                                                ?>
-                                                            </select>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label>Pengarang <small style="color: red;">* Wajib diisi</small></label>
-                                                            <input type="text" class="form-control" value="<?= $row['pengarang']; ?>" name="pengarang" placeholder="Masukkan nama pengarang" required>
-                                                            <small class="text-muted">Contoh: Ahmad Tohari, Pramoedya Ananta Toer, dll.</small>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label>Tahun Terbit <small style="color: red;">* Wajib diisi</small></label>
-                                                            <input type="number" min="1900" max="<?= date('Y') + 5; ?>" class="form-control" value="<?= $row['tahun_terbit']; ?>" name="tahunTerbit" required>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label>ISBN <small style="color: red;">* Wajib diisi</small></label>
-                                                            <input type="text" class="form-control" value="<?= $row['isbn']; ?>" name="iSbn" placeholder="Contoh: 978-602-8519-93-9" required>
-                                                            <small class="text-muted">Masukkan nomor ISBN lengkap dengan tanda hubung</small>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label>Jumlah Buku Baik <small style="color: red;">* Wajib diisi</small></label>
-                                                            <input type="number" min="0" class="form-control" value="<?= $row['j_buku_baik']; ?>" name="jumlahBukuBaik" required>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label>Jumlah Buku Rusak <small style="color: red;">* Wajib diisi</small></label>
-                                                            <input type="number" min="0" class="form-control" value="<?= $row['j_buku_rusak']; ?>" name="jumlahBukuRusak" required>
-                                                        </div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
-                                                        <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!-- /. Modal Edit -->
-                                </tbody>
-                            <?php
-                            }
-                            ?>
+                                <?php
+                                }
+                                ?>
+                            </tbody>
                         </table>
                     </div>
                     <!-- /.box-body -->
@@ -167,9 +88,138 @@
     <!-- /.content -->
 </div>
 
+<!-- Modal Edit (Dipindahkan ke luar loop) -->
+<?php
+// Reset query untuk modal
+mysqli_data_seek($query, 0);
+while ($row = mysqli_fetch_assoc($query)) {
+?>
+<div class="modal fade" id="modalEditBuku<?= $row['id_buku']; ?>">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border-radius: 5px;">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" style="font-family: 'Quicksand', sans-serif; font-weight: bold;">Edit Buku ( <?= $row['judul_buku']; ?> - <?= $row['pengarang']; ?> )</h4>
+            </div>
+            <form action="pages/function/Buku.php?act=edit" enctype="multipart/form-data" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="id_buku" value="<?= $row['id_buku']; ?>">
+                    <div class="form-group">
+                        <label>Judul Buku <small style="color: red;">* Wajib diisi</small></label>
+                        <input type="text" class="form-control" value="<?= $row['judul_buku']; ?>" name="judulBuku" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Kategori Buku <small style="color: red;">* Wajib diisi</small></label>
+                        <select class="form-control" name="kategoriBuku" required>
+                            <option selected value="<?= $row['kategori_buku']; ?>"><?= $row['kategori_buku']; ?> ( Dipilih Sebelumnya )</option>
+                            <?php
+                            include "../../config/koneksi.php";
+                            $sql = mysqli_query($koneksi, "SELECT * FROM kategori");
+                            while ($data = mysqli_fetch_array($sql)) {
+                            ?>
+                                <option value="<?= $data['nama_kategori']; ?>"> <?= $data['nama_kategori']; ?></option>
+                            <?php
+                            }
+                            ?>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Penerbit Buku <small style="color: red;">* Wajib diisi</small></label>
+                        <select class="form-control select2" name="penerbitBuku" required>
+                            <option selected value="<?= $row['penerbit_buku']; ?>"><?= $row['penerbit_buku']; ?> ( Dipilih Sebelumnya )</option>
+                            <?php
+                            include "../../config/koneksi.php";
+                            $sql = mysqli_query($koneksi, "SELECT * FROM penerbit");
+                            while ($data = mysqli_fetch_array($sql)) {
+                            ?>
+                                <option value="<?= $data['nama_penerbit']; ?>"><?= $data['nama_penerbit']; ?> ( <?= $data['verif_penerbit']; ?> )</option>
+                            <?php
+                            }
+                            ?>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Pengarang <small style="color: red;">* Wajib diisi</small></label>
+                        <input type="text" class="form-control" value="<?= $row['pengarang']; ?>" name="pengarang" placeholder="Masukkan nama pengarang" required>
+                        <small class="text-muted">Contoh: Ahmad Tohari, Pramoedya Ananta Toer, dll.</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Tahun Terbit <small style="color: red;">* Wajib diisi</small></label>
+                        <input type="number" min="1900" max="<?= date('Y') + 5; ?>" class="form-control" value="<?= $row['tahun_terbit']; ?>" name="tahunTerbit" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ISBN <small style="color: red;">* Wajib diisi</small></label>
+                        <input type="text" class="form-control" value="<?= $row['isbn']; ?>" name="iSbn" placeholder="Contoh: 978-602-8519-93-9" required>
+                        <small class="text-muted">Masukkan nomor ISBN lengkap dengan tanda hubung</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Jumlah Buku Baik <small style="color: red;">* Wajib diisi</small></label>
+                        <input type="number" min="0" class="form-control" value="<?= $row['j_buku_baik']; ?>" name="jumlahBukuBaik" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Jumlah Buku Rusak <small style="color: red;">* Wajib diisi</small></label>
+                        <input type="number" min="0" class="form-control" value="<?= $row['j_buku_rusak']; ?>" name="jumlahBukuRusak" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<?php
+}
+?>
+
+<!-- SCRIPTS -->
+<!-- jQuery 3 -->
+<script src="../../assets/bower_components/jquery/dist/jquery.min.js"></script>
+<!-- Bootstrap 3.3.7 -->
+<script src="../../assets/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<!-- DataTables -->
+<script src="../../assets/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+<script src="../../assets/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+<!-- SweetAlert -->
+<script src="../../assets/dist/js/sweetalert.min.js"></script>
+<!-- AdminLTE App -->
+<script src="../../assets/dist/js/adminlte.min.js"></script>
+
+<!-- Initialize DataTables -->
+<script>
+    $(function () {
+        $('#example1').DataTable({
+            'paging': true,
+            'lengthChange': true,
+            'searching': true,
+            'ordering': true,
+            'info': true,
+            'autoWidth': false,
+            'responsive': true,
+            'pageLength': 10,
+            'lengthMenu': [5, 10, 25, 50, 100],
+            'language': {
+                'lengthMenu': 'Tampilkan _MENU_ data per halaman',
+                'zeroRecords': 'Data tidak ditemukan',
+                'info': 'Menampilkan halaman _PAGE_ dari _PAGES_',
+                'infoEmpty': 'Tidak ada data yang tersedia',
+                'infoFiltered': '(difilter dari _MAX_ total data)',
+                'search': 'Cari:',
+                'paginate': {
+                    'first': 'Pertama',
+                    'last': 'Terakhir',
+                    'next': 'Selanjutnya',
+                    'previous': 'Sebelumnya'
+                }
+            }
+        });
+    });
+</script>
+
 <script>
 let currentBookUnits = [];
-
 
 function lihatBarcodeUnits(id_buku, judul, pengarang, isbn) {
     // Set informasi buku
@@ -534,10 +584,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-
-<!-- jQuery 3 -->
-<script src="../../assets/bower_components/jquery/dist/jquery.min.js"></script>
-<script src="../../assets/dist/js/sweetalert.min.js"></script>
 
 <!-- Pesan Berhasil Edit -->
 <script>

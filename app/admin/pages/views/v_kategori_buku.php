@@ -16,7 +16,6 @@
                     var yy = date.getYear();
                     var year = (yy < 1000) ? yy + 1900 : yy;
                     document.write(thisDay + ', ' + day + ' ' + months[month] + ' ' + year);
-                    //
                 </script>
             </small>
         </h1>
@@ -48,14 +47,14 @@
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
-                            <?php
-                            include "../../config/koneksi.php";
+                            <tbody>
+                                <?php
+                                include "../../config/koneksi.php";
 
-                            $no = 1;
-                            $query = mysqli_query($koneksi, "SELECT * FROM kategori");
-                            while ($row = mysqli_fetch_assoc($query)) {
-                            ?>
-                                <tbody>
+                                $no = 1;
+                                $query = mysqli_query($koneksi, "SELECT * FROM kategori");
+                                while ($row = mysqli_fetch_assoc($query)) {
+                                ?>
                                     <tr>
                                         <td><?= $no++; ?></td>
                                         <td><?= $row['nama_kategori']; ?></td>
@@ -64,6 +63,8 @@
                                             <a href="pages/function/Kategori.php?act=hapus&id=<?= $row['id_kategori']; ?>" class="btn btn-danger btn-sm btn-del" onclick="hapusAnggota()"><i class="fa fa-trash"></i></a>
                                         </td>
                                     </tr>
+                                    
+                                    <!-- Modal Edit untuk setiap row -->
                                     <div class="modal fade" id="modalEditKategori<?php echo $row['id_kategori']; ?>">
                                         <div class="modal-dialog">
                                             <div class="modal-content" style="border-radius: 5px;">
@@ -89,15 +90,12 @@
                                                     </div>
                                                 </form>
                                             </div>
-                                            <!-- /.modal-content -->
                                         </div>
-                                        <!-- /.modal-dialog -->
                                     </div>
-                                    <!-- /.modal -->
-                                </tbody>
-                            <?php
-                            }
-                            ?>
+                                <?php
+                                }
+                                ?>
+                            </tbody>
                         </table>
                     </div>
                     <!-- /.box-body -->
@@ -111,7 +109,7 @@
     <!-- /.content -->
 </div>
 
-<!-- -->
+<!-- Modal Tambah Kategori -->
 <form action="pages/function/Kategori.php?act=tambah" enctype="multipart/form-data" method="POST">
     <div class="modal fade" id="modalTambahKategori">
         <div class="modal-dialog">
@@ -131,17 +129,9 @@
                         $data = mysqli_fetch_array($query);
                         $kodeKategoriTerakhir = $data['kodeKategoriTerakhirDB'];
 
-                        // mengambil angka dari kode barang terbesar, menggunakan fungsi substr
-                        // dan diubah ke integer dengan (int)
                         $urutan = (int) substr($kodeKategoriTerakhir, 3, 3);
-
-                        // bilangan yang diambil ini ditambah 1 untuk menentukan nomor urut berikutnya
                         $urutan++;
 
-                        // membentuk kode barang baru
-                        // perintah sprintf("%03s", $urutan); berguna untuk membuat string menjadi 3 karakter
-                        // misalnya perintah sprintf("%03s", 15); maka akan menghasilkan '015'
-                        // angka yang diambil tadi digabungkan dengan kode huruf yang kita inginkan, misalnya BRG 
                         $huruf = "KT-";
                         $kodeKategori = $huruf . sprintf("%03s", $urutan);
                         ?>
@@ -156,20 +146,58 @@
                     <button type="submit" class="btn btn-primary btn-block">Simpan</button>
                 </div>
             </div>
-            <!-- /.modal-content -->
         </div>
-        <!-- /.modal-dialog -->
     </div>
-    <!-- /.modal -->
 </form>
+
+<!-- SCRIPTS -->
+<!-- jQuery 3 -->
+<script src="../../assets/bower_components/jquery/dist/jquery.min.js"></script>
+<!-- Bootstrap 3.3.7 -->
+<script src="../../assets/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<!-- DataTables -->
+<script src="../../assets/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+<script src="../../assets/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+<!-- SweetAlert -->
+<script src="../../assets/dist/js/sweetalert.min.js"></script>
+<!-- AdminLTE App -->
+<script src="../../assets/dist/js/adminlte.min.js"></script>
+
 <script>
     function tambahKategori() {
         $('#modalTambahKategori').modal('show');
     }
+
+    // Initialize DataTables
+    $(function () {
+        $('#example1').DataTable({
+            'paging': true,
+            'lengthChange': true,
+            'searching': true,
+            'ordering': true,
+            'info': true,
+            'autoWidth': false,
+            'responsive': true,
+            'pageLength': 10,
+            'lengthMenu': [5, 10, 25, 50, 100],
+            'language': {
+                'lengthMenu': 'Tampilkan _MENU_ data per halaman',
+                'zeroRecords': 'Data tidak ditemukan',
+                'info': 'Menampilkan halaman _PAGE_ dari _PAGES_',
+                'infoEmpty': 'Tidak ada data yang tersedia',
+                'infoFiltered': '(difilter dari _MAX_ total data)',
+                'search': 'Cari:',
+                'paginate': {
+                    'first': 'Pertama',
+                    'last': 'Terakhir',
+                    'next': 'Selanjutnya',
+                    'previous': 'Sebelumnya'
+                }
+            }
+        });
+    });
 </script>
-<!-- jQuery 3 -->
-<script src="../../assets/bower_components/jquery/dist/jquery.min.js"></script>
-<script src="../../assets/dist/js/sweetalert.min.js"></script>
+
 <!-- Pesan Berhasil Edit -->
 <script>
     <?php
@@ -183,6 +211,7 @@
     $_SESSION['berhasil'] = '';
     ?>
 </script>
+
 <!-- Notif Gagal -->
 <script>
     <?php
@@ -196,6 +225,7 @@
     $_SESSION['gagal'] = '';
     ?>
 </script>
+
 <!-- Swal Hapus Data -->
 <script>
     $('.btn-del').on('click', function(e) {
