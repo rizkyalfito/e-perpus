@@ -43,31 +43,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
-    // Cari Buku berdasarkan ISBN
     if (isset($_POST['aksi']) && $_POST['aksi'] === 'cari_buku') {
         $barcode_input = mysqli_real_escape_string($koneksi, $_POST['isbn']);
         
-        // Cari buku_unit berdasarkan barcode unik
+        // Cari di buku_unit terlebih dahulu (barcode unit seperti BK00001-001)
         $query = mysqli_query($koneksi, "SELECT bu.*, b.judul_buku, b.kategori_buku, b.penerbit_buku, b.pengarang 
                                          FROM buku_unit bu 
                                          JOIN buku b ON bu.id_buku = b.id_buku 
-                                         WHERE bu.barcode = '$barcode_input' AND bu.status = 'tersedia'");
+                                         WHERE LOWER(bu.barcode) = LOWER('$barcode_input') AND bu.status = 'tersedia'");
         
         if (mysqli_num_rows($query) > 0) {
+            // Jika ditemukan di buku_unit
             $data = mysqli_fetch_assoc($query);
             
             echo json_encode([
                 'status' => 'success',
                 'data' => $data,
-                'message' => 'Data buku berhasil ditemukan',
+                'search_type' => 'unit_barcode',
+                'message' => 'Data buku berhasil ditemukan berdasarkan barcode unit',
                 'notification_type' => 'scan_success'
             ]);
         } else {
-            echo json_encode([
-                'status' => 'error',
-                'message' => 'Buku dengan barcode tersebut tidak ditemukan atau sedang dipinjam',
-                'notification_type' => 'scan_error'
-            ]);
+            // Jika tidak ditemukan di buku_unit, cari berdasarkan ISBN di tabel buku
+            $query2 = mysqli_query($koneksi, "SELECT b.*, bu.barcode, bu.kondisi, bu.status 
+                                              FROM buku b 
+                                              JOIN buku_unit bu ON b.id_buku = bu.id_buku 
+                                              WHERE (b.isbn = '$barcode_input' OR b.barcode = '$barcode_input') 
+                                              AND bu.status = 'tersedia' 
+                                              LIMIT 1");
+            
+            if (mysqli_num_rows($query2) > 0) {
+                // Jika ditemukan berdasarkan ISBN
+                $data = mysqli_fetch_assoc($query2);
+                
+                // Format data sesuai dengan struktur yang diharapkan
+                $formatted_data = [
+                    'id_buku_unit' => $data['id_buku'],
+                    'id_buku' => $data['id_buku'],
+                    'barcode' => $data['barcode'], // barcode unit yang akan digunakan
+                    'kondisi' => $data['kondisi'],
+                    'status' => $data['status'],
+                    'judul_buku' => $data['judul_buku'],
+                    'kategori_buku' => $data['kategori_buku'],
+                    'penerbit_buku' => $data['penerbit_buku'],
+                    'pengarang' => $data['pengarang']
+                ];
+                
+                echo json_encode([
+                    'status' => 'success',
+                    'data' => $formatted_data,
+                    'search_type' => 'isbn',
+                    'message' => 'Data buku berhasil ditemukan berdasarkan ISBN, menggunakan unit tersedia: ' . $data['barcode'],
+                    'notification_type' => 'scan_success'
+                ]);
+            } else {
+                // Tidak ditemukan sama sekali
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Buku dengan barcode/ISBN tersebut tidak ditemukan atau semua unit sedang dipinjam',
+                    'notification_type' => 'scan_error'
+                ]);
+            }
         }
         exit;
     }

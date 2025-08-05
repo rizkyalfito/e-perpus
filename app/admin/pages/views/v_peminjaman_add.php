@@ -404,9 +404,15 @@ function scanBukuBarcode() {
                     (decodedText, decodedResult) => {
                         showScanStatus('buku', 'success', 'Barcode berhasil terbaca, mencari data buku...');
                         showNotification('scan_success', 'Scan Berhasil', 'Barcode buku berhasil terbaca, mencari data...');
-                        // Send raw decodedText without formatting
-                        $('#isbnBuku').val(decodedText);
-                        cariBuku(decodedText);
+                        // Trim scanned barcode before sending
+                        let scannedCode = decodedText.trim();
+                        // Format only if numeric
+                        if (/^\d+$/.test(scannedCode)) {
+                            scannedCode = formatISBN(scannedCode);
+                        }
+                        // Send as-is if contains non-numeric chars (e.g., BK00002-001)
+                        $('#isbnBuku').val(scannedCode);
+                        cariBuku(scannedCode);
                         html5QrCodeBuku.stop();
                         setTimeout(() => {
                             $('#modalScanBuku').modal('hide');
