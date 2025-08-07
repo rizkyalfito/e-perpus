@@ -134,7 +134,7 @@ i<!-- Content Wrapper. Contains page content -->
                                                     <div class="modal-body">
                                                         <input type="hidden" name="id_buku" value="<?= $row['id_buku']; ?>">
                                                         <!-- Preview Foto Sampul Current -->
-                                                        < <?php if ($path_foto && !empty($foto_sampul)): ?>
+                                                        <?php if ($path_foto && !empty($foto_sampul)): ?>
                                                         <div class="form-group">
                                                             <label>Foto Sampul Saat Ini</label>
                                                             <div style="text-align: center; margin-bottom: 10px;">

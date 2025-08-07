@@ -60,11 +60,12 @@
                                         $units[] = $unit;
                                     }
                                     
-                                    // Handle foto sampul - tidak pakai default
-                                    $foto_sampul = null;
+                                    // Handle foto sampul - FIXED: Path foto sampul yang benar
+                                    $foto_sampul = $row['foto_sampul'];
                                     $path_foto = null;
-                                    if (!empty($row['foto_sampul'])) {
-                                        $foto_sampul = $row['foto_sampul'];
+                                    
+                                    // Jika ada foto_sampul di database, buat path lengkap
+                                    if (!empty($foto_sampul)) {
                                         $path_foto = "assets/img/covers/" . $foto_sampul;
                                     }
                                 ?>
@@ -73,13 +74,13 @@
                                         
                                         <!-- Kolom Sampul -->
                                         <td style="text-align: center;">
-                                            <?php if ($path_foto && !empty($foto_sampul)): ?>
+                                            <?php if (!empty($foto_sampul) && file_exists($path_foto)): ?>
                                                 <div style="width: 60px; height: 80px; display: inline-block; position: relative;">
                                                     <img src="<?= $path_foto; ?>" 
                                                          alt="Sampul <?= htmlspecialchars($row['judul_buku']); ?>" 
                                                          style="width: 60px; height: 80px; object-fit: cover; border-radius: 5px; cursor: pointer;"
                                                          onclick="previewCover('<?= $path_foto; ?>', '<?= htmlspecialchars($row['judul_buku']); ?>')"
-                                                         onerror="handleImageError(this, '<?= htmlspecialchars($row['judul_buku']); ?>')">
+                                                         onerror="this.style.display='none'; this.parentNode.innerHTML='<div style=\'width:60px;height:80px;display:flex;align-items:center;justify-content:center;background-color:#f5f5f5;border:1px dashed #ccc;border-radius:5px;color:#999;font-size:10px;text-align:center;\'>Tidak ada<br>sampul</div>';">
                                                 </div>
                                             <?php else: ?>
                                                 <div style="width: 60px; height: 80px; display: flex; align-items: center; justify-content: center; background-color: #f5f5f5; border: 1px dashed #ccc; border-radius: 5px; color: #999; font-size: 10px; text-align: center;">
@@ -92,9 +93,15 @@
                                         <td><?= !empty($row['klasifikasi_buku']) ? htmlspecialchars($row['klasifikasi_buku']) : '<em>Belum Diklasifikasi</em>'; ?></td>
                                         <td><?= htmlspecialchars($row['pengarang']); ?></td>
                                         <td><?= htmlspecialchars($row['penerbit_buku']); ?></td>
-                                        <td><?= $row['j_buku_baik']; ?></td>
-                                        <td><?= $row['j_buku_rusak']; ?></td>
-                                        <td><?= $row['j_buku_baik'] + $row['j_buku_rusak']; ?></td>
+                                        <td>
+                                            <?= $row['j_buku_baik']; ?>
+                                        </td>
+                                        <td>
+                                            <?= $row['j_buku_rusak']; ?>
+                                        </td>
+                                        <td>
+                                            <?= $row['j_buku_baik'] + $row['j_buku_rusak']; ?>
+                                        </td>
                                     </tr>
                                 <?php
                                 }
@@ -154,18 +161,21 @@ function previewCover(imageSrc, title) {
     $('#modalPreviewCover').modal('show');
 }
 
-// Function untuk handle error gambar
-function handleImageError(img, title) {
-    // Hide the image and replace with placeholder
-    img.style.display = 'none';
+// Debug function - untuk testing path foto
+function debugFotoPath() {
+    // Bisa digunakan untuk debug di console browser
+    console.log('Debugging foto paths...');
     
-    // Create placeholder div
-    const placeholder = document.createElement('div');
-    placeholder.style.cssText = 'width: 60px; height: 80px; display: flex; align-items: center; justify-content: center; background-color: #f5f5f5; border: 1px dashed #ccc; border-radius: 5px; color: #999; font-size: 10px; text-align: center;';
-    placeholder.innerHTML = 'Sampul<br>hilang';
-    placeholder.title = 'Sampul untuk "' + title + '" tidak dapat dimuat';
-    
-    // Replace the image with placeholder
-    img.parentNode.replaceChild(placeholder, img);
+    // Check semua img tags
+    const images = document.querySelectorAll('img[alt*="Sampul"]');
+    images.forEach((img, index) => {
+        console.log(`Image ${index + 1}:`, {
+            src: img.src,
+            alt: img.alt,
+            naturalWidth: img.naturalWidth,
+            naturalHeight: img.naturalHeight,
+            complete: img.complete
+        });
+    });
 }
 </script>

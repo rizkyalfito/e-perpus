@@ -4,6 +4,7 @@ include "../../../../config/koneksi.php";
 
 // Function untuk upload foto sampul
 function uploadFotoSampul($file, $id_buku) {
+    // Path ke admin assets (untuk admin upload)
     $targetDir = "../../assets/img/covers/";
     
     // Buat folder jika belum ada
@@ -36,18 +37,32 @@ function uploadFotoSampul($file, $id_buku) {
     }
     
     if (move_uploaded_file($file["tmp_name"], $targetFile)) {
+        // Juga copy ke user assets agar bisa diakses dari user side
+        $userTargetDir = "../../../user/assets/img/covers/";
+        if (!file_exists($userTargetDir)) {
+            mkdir($userTargetDir, 0777, true);
+        }
+        copy($targetFile, $userTargetDir . $fileName);
+        
         return $fileName;
     } else {
         throw new Exception("Gagal mengupload file");
     }
 }
 
-// Function untuk hapus foto sampul lama - UPDATED: Hapus check untuk default cover
+// Function untuk hapus foto sampul lama - REVERTED
 function hapusFotoSampul($namaFile) {
     if ($namaFile && !empty($namaFile)) {
-        $filePath = "../../assets/img/covers/" . $namaFile;
-        if (file_exists($filePath)) {
-            unlink($filePath);
+        // Hapus dari admin assets
+        $adminPath = "../../assets/img/covers/" . $namaFile;
+        if (file_exists($adminPath)) {
+            unlink($adminPath);
+        }
+        
+        // Hapus dari user assets
+        $userPath = "../../user/assets/img/covers/" . $namaFile;
+        if (file_exists($userPath)) {
+            unlink($userPath);
         }
     }
 }
