@@ -1,15 +1,21 @@
-<!-- Content Wrapper -->
+i<!-- Content Wrapper. Contains page content -->
 <div class="content-wrapper">
-    <!-- Content Header -->
+    <!-- Content Header (Page header) -->
     <section class="content-header">
         <h1 style="font-family: 'Quicksand', sans-serif; font-weight: bold;">
             Data Buku
             <small>
-                <script>
-                    const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-                    const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jum&#39;at','Sabtu'];
-                    const date = new Date();
-                    document.write(`${days[date.getDay()]}, ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`);
+                <script type='text/javascript'>
+                    var months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                    var myDays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jum&#39;at', 'Sabtu'];
+                    var date = new Date();
+                    var day = date.getDate();
+                    var month = date.getMonth();
+                    var thisDay = date.getDay(),
+                        thisDay = myDays[thisDay];
+                    var yy = date.getYear();
+                    var year = (yy < 1000) ? yy + 1900 : yy;
+                    document.write(thisDay + ', ' + day + ' ' + months[month] + ' ' + year);
                 </script>
             </small>
         </h1>
@@ -30,43 +36,69 @@
                             <button type="button" onclick="tambahBuku()" class="btn btn-info"><i class="fa fa-plus"></i> Tambah Buku</button>
                         </div>
                     </div>
+                    <!-- /.box-header -->
                     <div class="box-body table-responsive">
                         <table id="example1" class="table table-bordered table-striped">
                             <thead>
                                 <tr>
-                                    <th>No</th><th>Sampul</th><th>Judul Buku</th><th>Klasifikasi</th><th>Pengarang</th>
-                                    <th>Penerbit</th><th>Buku Baik</th><th>Buku Rusak</th><th>Jumlah Buku</th><th>Barcode Units</th><th>Aksi</th>
+                                    <th>No</th>
+                                    <th>Sampul</th>
+                                    <th>Judul Buku</th>
+                                    <th>Klasifikasi</th>
+                                    <th>Pengarang</th>
+                                    <th>Penerbit</th>
+                                    <th>Buku Baik</th>
+                                    <th>Buku Rusak</th>
+                                    <th>Jumlah Buku</th>
+                                    <th>Barcode Units</th>
+                                    <th>Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php
                                 include "../../config/koneksi.php";
+
                                 $no = 1;
-                                $query = mysqli_query($koneksi, "SELECT * FROM buku ORDER BY judul_buku ASC");
+                                $query = mysqli_query($koneksi, "SELECT * FROM buku");
                                 while ($row = mysqli_fetch_assoc($query)) {
                                     $unit_query = mysqli_query($koneksi, "SELECT barcode, kondisi, status FROM buku_unit WHERE id_buku = " . $row['id_buku']);
                                     $units = [];
                                     while ($unit = mysqli_fetch_assoc($unit_query)) {
                                         $units[] = $unit;
                                     }
-                                    $foto_sampul = $row['foto_sampul'] ? $row['foto_sampul'] : 'default-cover.png';
-                                    $path_foto = "assets/img/covers/" . $foto_sampul;
+                                    
+                                    // Path foto sampul
+                                    $foto_sampul = null;
+                                    $path_foto = null;
+                                    if (!empty($row['foto_sampul'])) {
+                                        $foto_sampul = $row['foto_sampul'];
+                                        $path_foto = "assets/img/covers/" . $foto_sampul;
+                                    }
                                 ?>
                                     <tr>
                                         <td><?= $no++; ?></td>
                                         <td style="text-align: center;">
-                                            <img src="<?= $path_foto; ?>" alt="Sampul <?= htmlspecialchars($row['judul_buku']); ?>" 
-                                                 style="width: 60px; height: 80px; object-fit: cover; border-radius: 5px; cursor: pointer;"
-                                                 onclick="previewCover('<?= $path_foto; ?>', '<?= htmlspecialchars($row['judul_buku']); ?>')"
-                                                 onerror="this.src='assets/img/covers/default-cover.png'">
+                                            <?php if ($path_foto && !empty($foto_sampul)): ?>
+                                                <div style="width: 60px; height: 80px; display: inline-block; position: relative;">
+                                                    <img src="<?= $path_foto; ?>" 
+                                                        alt="Sampul <?= htmlspecialchars($row['judul_buku']); ?>" 
+                                                        style="width: 60px; height: 80px; object-fit: cover; border-radius: 5px; cursor: pointer;"
+                                                        onclick="previewCover('<?= $path_foto; ?>', '<?= htmlspecialchars($row['judul_buku']); ?>')"
+                                                        onerror="this.style.display='none'; this.parentNode.innerHTML='<div style=\'width:60px;height:80px;display:flex;align-items:center;justify-content:center;background-color:#f5f5f5;border:1px dashed #ccc;border-radius:5px;color:#999;font-size:10px;text-align:center;\'>Tidak ada<br>sampul</div>';">
+                                                </div>
+                                            <?php else: ?>
+                                                <div style="width: 60px; height: 80px; display: flex; align-items: center; justify-content: center; background-color: #f5f5f5; border: 1px dashed #ccc; border-radius: 5px; color: #999; font-size: 10px; text-align: center;">
+                                                    Tidak ada<br>sampul
+                                                </div>
+                                            <?php endif; ?>
                                         </td>
-                                        <td><?= htmlspecialchars($row['judul_buku']); ?></td>
-                                        <td><?= !empty($row['klasifikasi_buku']) ? htmlspecialchars($row['klasifikasi_buku']) : '<em>Belum Diklasifikasi</em>'; ?></td>
-                                        <td><?= htmlspecialchars($row['pengarang']); ?></td>
-                                        <td><?= htmlspecialchars($row['penerbit_buku']); ?></td>
+                                        <td><?= $row['judul_buku']; ?></td>
+                                        <td><?= !empty($row['klasifikasi_buku']) ? $row['klasifikasi_buku'] : '<em>Belum Diklasifikasi</em>'; ?></td>
+                                        <td><?= $row['pengarang']; ?></td>
+                                        <td><?= $row['penerbit_buku']; ?></td>
                                         <td><?= $row['j_buku_baik']; ?></td>
                                         <td><?= $row['j_buku_rusak']; ?></td>
-                                        <td><?= $row['j_buku_rusak'] + $row['j_buku_baik']; ?></td>
+                                        <td><?php echo $row['j_buku_rusak'] + $row['j_buku_baik']; ?></td>
                                         <td>
                                             <?php if (count($units) > 0): ?>
                                             <ul style="list-style-type:none; padding-left: 0; max-height: 150px; overflow-y: auto; margin: 0;">
@@ -74,7 +106,7 @@
                                                     <li style="font-size: 12px; line-height: 1.2; margin-bottom: 2px;">
                                                         <strong><?= htmlspecialchars($unit['barcode']); ?></strong> - 
                                                         <?= ucfirst(htmlspecialchars($unit['kondisi'])); ?> - 
-                                                        <?= $unit['status'] == 'tersedia' ? '<span style="color:green;">Tersedia</span>' : '<span style="color:red;">Dipinjam</span>'; ?>
+                                                        <em><?= $unit['status'] == 'tersedia' ? '<span style="color:green;">Tersedia</span>' : '<span style="color:red;">Dipinjam</span>'; ?></em>
                                                     </li>
                                                 <?php endforeach; ?>
                                             </ul>
@@ -89,29 +121,41 @@
                                         </td>
                                     </tr>
 
-                                    <!-- Modal Edit Buku -->
+                                    <!-- Modal Edit dengan Klasifikasi dan Foto Sampul -->
                                     <div class="modal fade" id="modalEditBuku<?= $row['id_buku']; ?>">
                                         <div class="modal-dialog">
                                             <div class="modal-content" style="border-radius: 5px;">
                                                 <div class="modal-header">
-                                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span></button>
                                                     <h4 class="modal-title" style="font-family: 'Quicksand', sans-serif; font-weight: bold;">Edit Buku</h4>
                                                 </div>
                                                 <form action="pages/function/Buku.php?act=edit" enctype="multipart/form-data" method="POST">
                                                     <div class="modal-body">
                                                         <input type="hidden" name="id_buku" value="<?= $row['id_buku']; ?>">
-                                                        
-                                                        <!-- Current Cover Preview -->
+                                                        <!-- Preview Foto Sampul Current -->
+                                                        < <?php if ($path_foto && !empty($foto_sampul)): ?>
                                                         <div class="form-group">
                                                             <label>Foto Sampul Saat Ini</label>
                                                             <div style="text-align: center; margin-bottom: 10px;">
-                                                                <img src="<?= $path_foto; ?>" alt="Current Cover" 
-                                                                     style="max-width: 150px; max-height: 200px; object-fit: cover; border: 2px solid #ddd; border-radius: 8px;"
-                                                                     onerror="this.src='assets/img/covers/default-cover.png'">
+                                                                <img src="<?= $path_foto; ?>" 
+                                                                    alt="Current Cover" 
+                                                                    style="max-width: 150px; max-height: 200px; object-fit: cover; border: 2px solid #ddd; border-radius: 8px;"
+                                                                    onerror="this.style.display='none'; this.parentNode.innerHTML='<div style=\'width:150px;height:200px;display:flex;align-items:center;justify-content:center;background-color:#f5f5f5;border:2px dashed #ccc;border-radius:8px;color:#999;\'>Foto tidak ditemukan</div>';">
                                                             </div>
                                                         </div>
+                                                        <?php else: ?>
+                                                            <div class="form-group">
+                                                                <label>Foto Sampul Saat Ini</label>
+                                                                <div style="text-align: center; margin-bottom: 10px;">
+                                                                    <div style="width: 150px; height: 200px; display: flex; align-items: center; justify-content: center; background-color: #f5f5f5; border: 2px dashed #ccc; border-radius: 8px; color: #999; margin: 0 auto;">
+                                                                        Belum ada sampul
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <?php endif; ?>
                                                         
-                                                        <!-- New Cover Upload -->
+                                                        <!-- Upload Foto Sampul Baru -->
                                                         <div class="form-group">
                                                             <label>Ubah Foto Sampul</label>
                                                             <input type="file" class="form-control" name="fotoSampul" accept="image/*" onchange="previewNewCover(this, 'preview-edit-<?= $row['id_buku']; ?>')">
@@ -121,44 +165,15 @@
                                                             </div>
                                                         </div>
                                                         
-                                                        <!-- Form Fields -->
-                                                        <?php
-                                                        $fields = [
-                                                            ['judulBuku', 'Judul Buku', 'text', $row['judul_buku'], true],
-                                                            ['klasifikasiBuku', 'Klasifikasi Buku', 'text', $row['klasifikasi_buku'], false],
-                                                            ['penerbitBuku', 'Penerbit Buku', 'text', $row['penerbit_buku'], true],
-                                                            ['pengarang', 'Pengarang', 'text', $row['pengarang'], true],
-                                                            ['tahunTerbit', 'Tahun Terbit', 'number', $row['tahun_terbit'], true],
-                                                            ['iSbn', 'ISBN', 'text', $row['isbn'], true],
-                                                            ['jumlahBukuBaik', 'Jumlah Buku Baik', 'number', $row['j_buku_baik'], true],
-                                                            ['jumlahBukuRusak', 'Jumlah Buku Rusak', 'number', $row['j_buku_rusak'], true]
-                                                        ];
+                                                        <div class="form-group">
+                                                            <label>Judul Buku <small style="color: red;">* Wajib diisi</small></label>
+                                                            <input type="text" class="form-control" value="<?= $row['judul_buku']; ?>" name="judulBuku" required>
+                                                        </div>
                                                         
-                                                        foreach ($fields as $field) {
-                                                            $required = $field[4] ? 'required' : '';
-                                                            $requiredText = $field[4] ? '<small style="color: red;">* Wajib diisi</small>' : '';
-                                                            $value = htmlspecialchars($field[3]);
-                                                            
-                                                            if ($field[2] == 'number') {
-                                                                $extra = $field[0] == 'tahunTerbit' ? 'min="1900" max="' . (date('Y') + 5) . '"' : 'min="0"';
-                                                                echo "<div class='form-group'>
-                                                                    <label>{$field[1]} {$requiredText}</label>
-                                                                    <input type='number' class='form-control' name='{$field[0]}' value='{$value}' {$extra} {$required}>
-                                                                </div>";
-                                                            } else {
-                                                                echo "<div class='form-group'>
-                                                                    <label>{$field[1]} {$requiredText}</label>
-                                                                    <input type='text' class='form-control' name='{$field[0]}' value='{$value}' {$required}>
-                                                                </div>";
-                                                            }
-                                                        }
-                                                        ?>
-                                                        
-                                                        <!-- Category Select -->
                                                         <div class="form-group">
                                                             <label>Kategori Buku <small style="color: red;">* Wajib diisi</small></label>
                                                             <select class="form-control" name="kategoriBuku" required>
-                                                                <option value="">-- Pilih kategori buku --</option>
+                                                                <option value="" disabled>-- Pilih kategori buku --</option>
                                                                 <?php
                                                                 $sql_kategori = mysqli_query($koneksi, "SELECT * FROM kategori");
                                                                 while ($data_kategori = mysqli_fetch_array($sql_kategori)) {
@@ -167,6 +182,42 @@
                                                                 }
                                                                 ?>
                                                             </select>
+                                                        </div>
+                                                        
+                                                        <div class="form-group">
+                                                            <label>Klasifikasi Buku</label>
+                                                            <input type="text" class="form-control" placeholder="Masukkan klasifikasi buku (contoh: 001.1, 300.2, dll)" name="klasifikasiBuku" value="<?= $row['klasifikasi_buku']; ?>">
+                                                            <small class="text-muted">Klasifikasi menggunakan sistem Dewey Decimal atau sistem lainnya</small>
+                                                        </div>
+                                                        
+                                                        <div class="form-group">
+                                                            <label>Penerbit Buku <small style="color: red;">* Wajib diisi</small></label>
+                                                            <input type="text" class="form-control" value="<?= $row['penerbit_buku']; ?>" name="penerbitBuku" required>
+                                                        </div>
+                                                        
+                                                        <div class="form-group">
+                                                            <label>Pengarang <small style="color: red;">* Wajib diisi</small></label>
+                                                            <input type="text" class="form-control" value="<?= $row['pengarang']; ?>" name="pengarang" required>
+                                                        </div>
+                                                        
+                                                        <div class="form-group">
+                                                            <label>Tahun Terbit <small style="color: red;">* Wajib diisi</small></label>
+                                                            <input type="number" min="1900" max="<?= date('Y') + 5; ?>" class="form-control" value="<?= $row['tahun_terbit']; ?>" name="tahunTerbit" required>
+                                                        </div>
+                                                        
+                                                        <div class="form-group">
+                                                            <label>ISBN <small style="color: red;">* Wajib diisi</small></label>
+                                                            <input type="text" class="form-control" value="<?= $row['isbn']; ?>" name="iSbn" required>
+                                                        </div>
+                                                        
+                                                        <div class="form-group">
+                                                            <label>Jumlah Buku Baik <small style="color: red;">* Wajib diisi</small></label>
+                                                            <input type="number" min="0" class="form-control" value="<?= $row['j_buku_baik']; ?>" name="jumlahBukuBaik" required>
+                                                        </div>
+                                                        
+                                                        <div class="form-group">
+                                                            <label>Jumlah Buku Rusak <small style="color: red;">* Wajib diisi</small></label>
+                                                            <input type="number" min="0" class="form-control" value="<?= $row['j_buku_rusak']; ?>" name="jumlahBukuRusak" required>
                                                         </div>
                                                     </div>
                                                     <div class="modal-footer">
@@ -181,78 +232,97 @@
                             </tbody>
                         </table>
                     </div>
+                    </div>
+                    <!-- /.box-body -->
                 </div>
+                <!-- /.box -->
             </div>
+            <!-- /.col -->
         </div>
+        <!-- /.row -->
     </section>
+    <!-- /.content -->
 </div>
 
-<!-- Modal Tambah Buku -->
+<!-- Modal Tambah Buku dengan Foto Sampul -->
 <div class="modal fade" id="modalTambahBuku">
     <div class="modal-dialog">
         <div class="modal-content" style="border-radius: 5px;">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" style="font-family: 'Quicksand', sans-serif; font-weight: bold;">Tambah Buku</h4>
             </div>
             <form action="pages/function/Buku.php?act=tambah" enctype="multipart/form-data" method="POST">
                 <div class="modal-body">
-                    <!-- Upload Cover -->
+                    <!-- Upload Foto Sampul -->
                     <div class="form-group">
                         <label>Foto Sampul Buku</label>
                         <input type="file" class="form-control" name="fotoSampul" accept="image/*" onchange="previewNewCover(this, 'preview-tambah')">
-                        <small class="text-muted">Format: JPG, JPEG, PNG, GIF. Maksimal 5MB. Opsional.</small>
+                        <small class="text-muted">Format: JPG, JPEG, PNG, GIF. Maksimal 5MB. Opsional - akan menggunakan sampul default jika tidak diisi.</small>
                         <div style="text-align: center; margin-top: 10px;">
                             <img id="preview-tambah" style="max-width: 150px; max-height: 200px; object-fit: cover; border: 2px solid #ddd; border-radius: 8px; display: none;">
                         </div>
                     </div>
                     
-                    <!-- Form Fields for Add -->
-                    <?php
-                    $addFields = [
-                        ['judulBuku', 'Judul Buku', 'text', 'Masukkan judul buku', true],
-                        ['klasifikasiBuku', 'Klasifikasi Buku', 'text', 'Masukkan klasifikasi buku (contoh: 001.1, 300.2, dll)', false],
-                        ['penerbitBuku', 'Penerbit Buku', 'text', 'Masukkan nama penerbit', true],
-                        ['pengarang', 'Pengarang', 'text', 'Masukkan nama pengarang', true],
-                        ['tahunTerbit', 'Tahun Terbit', 'number', 'Contoh: ' . date('Y'), true],
-                        ['iSbn', 'ISBN', 'text', 'Contoh: 978-602-8519-93-9', true],
-                        ['jumlahBukuBaik', 'Jumlah Buku Baik', 'number', 'Masukkan jumlah buku baik', true],
-                        ['jumlahBukuRusak', 'Jumlah Buku Rusak', 'number', 'Masukkan jumlah buku rusak', true]
-                    ];
+                    <div class="form-group">
+                        <label>Judul Buku <small style="color: red;">* Wajib diisi</small></label>
+                        <input type="text" class="form-control" placeholder="Masukkan judul buku" name="judulBuku" required>
+                    </div>
                     
-                    foreach ($addFields as $field) {
-                        $required = $field[4] ? 'required' : '';
-                        $requiredText = $field[4] ? '<small style="color: red;">* Wajib diisi</small>' : '';
-                        $placeholder = $field[3];
-                        
-                        if ($field[2] == 'number') {
-                            $extra = $field[0] == 'tahunTerbit' ? 'min="1900" max="' . (date('Y') + 5) . '"' : 'min="0"';
-                            echo "<div class='form-group'>
-                                <label>{$field[1]} {$requiredText}</label>
-                                <input type='number' class='form-control' name='{$field[0]}' placeholder='{$placeholder}' {$extra} {$required}>
-                            </div>";
-                        } else {
-                            echo "<div class='form-group'>
-                                <label>{$field[1]} {$requiredText}</label>
-                                <input type='text' class='form-control' name='{$field[0]}' placeholder='{$placeholder}' {$required}>
-                            </div>";
-                        }
-                    }
-                    ?>
-                    
-                    <!-- Category Select for Add -->
                     <div class="form-group">
                         <label>Kategori Buku <small style="color: red;">* Wajib diisi</small></label>
                         <select class="form-control" name="kategoriBuku" required>
-                            <option value="">-- Pilih kategori buku --</option>
+                            <option value="" disabled selected>-- Pilih kategori buku --</option>
                             <?php
                             include "../../config/koneksi.php";
                             $sql = mysqli_query($koneksi, "SELECT * FROM kategori");
                             while ($data = mysqli_fetch_array($sql)) {
-                                echo "<option value='{$data['nama_kategori']}'>{$data['nama_kategori']}</option>";
+                            ?>
+                                <option value="<?= $data['nama_kategori']; ?>"> <?= $data['nama_kategori']; ?></option>
+                            <?php
                             }
                             ?>
                         </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Klasifikasi Buku</label>
+                        <input type="text" class="form-control" placeholder="Masukkan klasifikasi buku (contoh: 001.1, 300.2, dll)" name="klasifikasiBuku">
+                        <small class="text-muted">Klasifikasi menggunakan sistem Dewey Decimal atau sistem lainnya. Opsional.</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Penerbit Buku <small style="color: red;">* Wajib diisi</small></label>
+                        <input type="text" class="form-control" placeholder="Masukkan nama penerbit" name="penerbitBuku" required>
+                        <small class="text-muted">Contoh: Gramedia Pustaka Utama, Mizan, Erlangga, dll.</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Pengarang <small style="color: red;">* Wajib diisi</small></label>
+                        <input type="text" class="form-control" placeholder="Masukkan nama pengarang" name="pengarang" required>
+                        <small class="text-muted">Contoh: Ahmad Tohari, Pramoedya Ananta Toer, dll.</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Tahun Terbit <small style="color: red;">* Wajib diisi</small></label>
+                        <input type="number" min="1900" max="<?= date('Y') + 5; ?>" class="form-control" placeholder="Contoh: <?= date('Y'); ?>" name="tahunTerbit" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>ISBN <small style="color: red;">* Wajib diisi</small></label>
+                        <input type="text" class="form-control" placeholder="Contoh: 978-602-8519-93-9" name="iSbn" required>
+                        <small class="text-muted">Masukkan nomor ISBN lengkap dengan tanda hubung</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Jumlah Buku Baik <small style="color: red;">* Wajib diisi</small></label>
+                        <input type="number" min="0" class="form-control" placeholder="Masukkan jumlah buku baik" name="jumlahBukuBaik" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Jumlah Buku Rusak <small style="color: red;">* Wajib diisi</small></label>
+                        <input type="number" min="0" class="form-control" placeholder="Masukkan jumlah buku rusak" name="jumlahBukuRusak" required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -265,8 +335,8 @@
 </div>
 
 <!-- Modal Preview Cover -->
-<div class="modal fade" id="modalPreviewCover">
-    <div class="modal-dialog modal-sm">
+<div class="modal fade" id="modalPreviewCover" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-sm" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
@@ -283,8 +353,8 @@
 </div>
 
 <!-- Modal Barcode Units -->
-<div class="modal fade" id="modalBarcodeUnits">
-    <div class="modal-dialog modal-lg">
+<div class="modal fade" id="modalBarcodeUnits" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
@@ -293,7 +363,7 @@
                 </h4>
             </div>
             <div class="modal-body">
-                <!-- Book Info -->
+                <!-- Informasi Buku -->
                 <div class="row">
                     <div class="col-md-12">
                         <div style="border: 2px solid #3c8dbc; border-radius: 10px; padding: 15px; background-color: #f9f9f9; margin-bottom: 20px;">
@@ -312,23 +382,25 @@
                     </div>
                 </div>
 
-                <!-- Barcode Units List -->
+                <!-- Daftar Barcode Units -->
                 <div class="row">
                     <div class="col-md-12">
                         <h4 style="color: #28a745; font-weight: bold; margin-bottom: 15px;">
                             <i class="fa fa-list"></i> Daftar Barcode Per Unit
                         </h4>
                         <div id="barcodeUnitsContainer" style="max-height: 400px; overflow-y: auto;">
-                            <!-- Units will be generated via JavaScript -->
+                            <!-- Units akan di-generate via JavaScript -->
                         </div>
                     </div>
                 </div>
 
-                <!-- Print Actions -->
+                <!-- Actions -->
                 <div class="row" style="margin-top: 20px;">
                     <div class="col-md-12">
                         <div style="border: 1px solid #ddd; border-radius: 5px; padding: 15px; background-color: #fff;">
-                            <h5 style="font-weight: bold; color: #333;"><i class="fa fa-print"></i> Cetak Barcode</h5>
+                            <h5 style="font-weight: bold; color: #333;">
+                                <i class="fa fa-print"></i> Cetak Barcode
+                            </h5>
                             <div class="form-group" style="margin-top: 10px;">
                                 <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
                                     <button onclick="cetakSemuaBarcode()" class="btn btn-success btn-sm">
@@ -361,20 +433,25 @@ function tambahBuku() {
     $('#modalTambahBuku').modal('show');
 }
 
+// Function untuk preview cover image saat upload
 function previewNewCover(input, previewId) {
     const preview = document.getElementById(previewId);
+    
     if (input.files && input.files[0]) {
         const reader = new FileReader();
+        
         reader.onload = function(e) {
             preview.src = e.target.result;
             preview.style.display = 'block';
         };
+        
         reader.readAsDataURL(input.files[0]);
     } else {
         preview.style.display = 'none';
     }
 }
 
+// Function untuk preview cover dalam modal
 function previewCover(imageSrc, title) {
     document.getElementById('previewCoverImage').src = imageSrc;
     document.getElementById('previewCoverTitle').textContent = 'Sampul: ' + title;
@@ -382,27 +459,50 @@ function previewCover(imageSrc, title) {
 }
 
 function lihatBarcodeUnits(id_buku, judul, pengarang, isbn) {
+    // Set informasi buku
     document.getElementById('bukuJudulUnits').textContent = judul;
     document.getElementById('bukuPengarangUnits').textContent = pengarang;
     document.getElementById('bukuISBNUnits').textContent = isbn;
     
+    // Show loading
     document.getElementById('barcodeUnitsContainer').innerHTML = '<div class="text-center"><i class="fa fa-spinner fa-spin"></i> Memuat data units...</div>';
     $('#modalBarcodeUnits').modal('show');
     
+    // Fetch units data via AJAX
     fetch(`pages/function/Buku.php?act=get_units&id_buku=${id_buku}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
-            if (data.error) throw new Error(data.error);
+            console.log('Units data received:', data);
+            
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
             currentBookUnits = data;
             document.getElementById('totalUnits').textContent = data.length;
+            
+            // Generate barcode units display
             generateBarcodeUnitsDisplay(data, judul);
         })
         .catch(error => {
             console.error('Error fetching units:', error);
+            
+            // Show error message dengan opsi migrasi
             document.getElementById('barcodeUnitsContainer').innerHTML = `
                 <div class="alert alert-warning">
                     <h5><i class="fa fa-exclamation-triangle"></i> Data Units Tidak Ditemukan</h5>
-                    <p>Buku ini belum memiliki data units barcode.</p>
+                    <p>Buku ini belum memiliki data units barcode. Hal ini terjadi karena buku ditambahkan sebelum sistem barcode per unit diimplementasikan.</p>
+                    <hr>
+                    <p><strong>Solusi:</strong></p>
+                    <ol>
+                        <li>Jalankan script migrasi untuk membuat units dari data buku existing</li>
+                        <li>Atau edit buku ini untuk regenerate units</li>
+                    </ol>
                     <div style="margin-top: 15px;">
                         <a href="pages/function/migrate_existing_books.php" target="_blank" class="btn btn-primary btn-sm">
                             <i class="fa fa-database"></i> Jalankan Migrasi
@@ -413,6 +513,7 @@ function lihatBarcodeUnits(id_buku, judul, pengarang, isbn) {
                     </div>
                 </div>
             `;
+            
             document.getElementById('totalUnits').textContent = '0';
             currentBookUnits = [];
         });
@@ -427,22 +528,19 @@ function generateBarcodeUnitsDisplay(units, judul) {
         return;
     }
     
-    // Add select all checkbox first
-    const selectAllDiv = document.createElement('div');
-    selectAllDiv.style.cssText = 'margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 5px;';
-    selectAllDiv.innerHTML = `
-        <label style="margin: 0; font-weight: normal;">
-            <input type="checkbox" id="selectAllUnits" onchange="toggleSelectAll()" style="margin-right: 8px;">
-            Pilih Semua Units
-        </label>
-    `;
-    container.appendChild(selectAllDiv);
-    
     units.forEach((unit, index) => {
         const unitDiv = document.createElement('div');
         unitDiv.className = 'barcode-unit-item';
-        unitDiv.style.cssText = `border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 10px; 
-                                background-color: #fff; display: flex; align-items: center; justify-content: space-between;`;
+        unitDiv.style.cssText = `
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            padding: 15px; 
+            margin-bottom: 10px; 
+            background-color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        `;
         
         const statusColor = unit.status === 'tersedia' ? '#28a745' : '#dc3545';
         const kondisiColor = unit.kondisi === 'baik' ? '#007bff' : '#ffc107';
@@ -478,11 +576,23 @@ function generateBarcodeUnitsDisplay(units, judul) {
         
         container.appendChild(unitDiv);
     });
+    
+    // Add select all checkbox
+    const selectAllDiv = document.createElement('div');
+    selectAllDiv.style.cssText = 'margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 5px;';
+    selectAllDiv.innerHTML = `
+        <label style="margin: 0; font-weight: normal;">
+            <input type="checkbox" id="selectAllUnits" onchange="toggleSelectAll()" style="margin-right: 8px;">
+            Pilih Semua Units
+        </label>
+    `;
+    container.insertBefore(selectAllDiv, container.firstChild);
 }
 
 function toggleSelectAll() {
     const selectAll = document.getElementById('selectAllUnits');
     const checkboxes = document.querySelectorAll('.unit-checkbox');
+    
     checkboxes.forEach(checkbox => {
         checkbox.checked = selectAll.checked;
     });
@@ -522,20 +632,53 @@ function cetakBarcodeLabel(units, judul) {
         <head>
             <title>Label Barcode Units</title>
             <style>
-                body { font-family: Arial, sans-serif; margin: 10px; background: white; }
-                .label {
-                    width: 2.5in; height: 1in; border: 1px solid #000; padding: 5px; margin: 5px;
-                    display: inline-block; text-align: center; vertical-align: top; page-break-inside: avoid;
+                body { 
+                    font-family: Arial, sans-serif; 
+                    margin: 10px;
+                    background: white;
                 }
-                .label h6 { font-size: 9px; margin: 2px 0; font-weight: bold; }
-                .label p { font-size: 7px; margin: 1px 0; }
-                .label img { width: 120px; height: 25px; }
-                .status-badge { font-size: 6px; padding: 1px 4px; border-radius: 8px; color: white; margin: 0 2px; }
+                .label {
+                    width: 2.5in;
+                    height: 1in;
+                    border: 1px solid #000;
+                    padding: 5px;
+                    margin: 5px;
+                    display: inline-block;
+                    text-align: center;
+                    vertical-align: top;
+                    page-break-inside: avoid;
+                }
+                .label h6 {
+                    font-size: 9px;
+                    margin: 2px 0;
+                    font-weight: bold;
+                }
+                .label p {
+                    font-size: 7px;
+                    margin: 1px 0;
+                }
+                .label img {
+                    width: 120px;
+                    height: 25px;
+                }
+                .status-badge {
+                    font-size: 6px;
+                    padding: 1px 4px;
+                    border-radius: 8px;
+                    color: white;
+                    margin: 0 2px;
+                }
                 .kondisi-baik { background-color: #007bff; }
                 .kondisi-rusak { background-color: #ffc107; color: #000; }
                 .status-tersedia { background-color: #28a745; }
                 .status-dipinjam { background-color: #dc3545; }
-                @media print { body { margin: 0; } .label { margin: 2px; border: 1px solid #000; } }
+                @media print {
+                    body { margin: 0; }
+                    .label { 
+                        margin: 2px;
+                        border: 1px solid #000;
+                    }
+                }
             </style>
         </head>
         <body>
@@ -543,6 +686,7 @@ function cetakBarcodeLabel(units, judul) {
     
     units.forEach(unit => {
         const barcodeImageUrl = `https://barcode.tec-it.com/barcode.ashx?data=${unit.barcode}&code=Code128&translate-esc=true&width=200&height=50&dpi=300`;
+        
         content += `
             <div class="label">
                 <h6>${judul && judul.length > 25 ? judul.substring(0, 25) + '...' : judul || 'Judul Tidak Tersedia'}</h6>
@@ -557,12 +701,16 @@ function cetakBarcodeLabel(units, judul) {
         `;
     });
     
-    content += '</body></html>';
+    content += `
+        </body>
+        </html>
+    `;
     
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     printWindow.document.write(content);
     printWindow.document.close();
     
+    // Tunggu gambar barcode dimuat sebelum print
     printWindow.onload = function() {
         setTimeout(function() {
             printWindow.focus();
@@ -573,6 +721,7 @@ function cetakBarcodeLabel(units, judul) {
 
 function downloadSingleBarcode(barcode, judul) {
     const barcodeUrl = `https://barcode.tec-it.com/barcode.ashx?data=${barcode}&code=Code128&translate-esc=true&width=400&height=100&format=png&download=true`;
+    
     const link = document.createElement('a');
     link.href = barcodeUrl;
     link.download = `barcode_${judul.replace(/[^a-zA-Z0-9]/g, '_')}_${barcode}.png`;
@@ -584,10 +733,11 @@ function downloadSingleBarcode(barcode, judul) {
 
 function downloadSemuaBarcode() {
     const judul = document.getElementById('bukuJudulUnits').textContent;
+    
     currentBookUnits.forEach((unit, index) => {
         setTimeout(() => {
             downloadSingleBarcode(unit.barcode, judul);
-        }, index * 500);
+        }, index * 500); // Delay 500ms between downloads
     });
 }
 
@@ -596,13 +746,17 @@ function regenerateUnitsForBook(id_buku) {
         return;
     }
     
+    // Show loading
     document.getElementById('barcodeUnitsContainer').innerHTML = '<div class="text-center"><i class="fa fa-spinner fa-spin"></i> Regenerating units...</div>';
     
-    fetch(`pages/function/Buku.php?act=regenerate_units&id_buku=${id_buku}`, { method: 'POST' })
+    fetch(`pages/function/Buku.php?act=regenerate_units&id_buku=${id_buku}`, {
+        method: 'POST'
+    })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
             alert('Units berhasil di-regenerate!');
+            // Reload units data
             lihatBarcodeUnits(id_buku, 
                 document.getElementById('bukuJudulUnits').textContent,
                 document.getElementById('bukuPengarangUnits').textContent,
@@ -618,9 +772,34 @@ function regenerateUnitsForBook(id_buku) {
     });
 }
 
-// Form validation
+// Form validation untuk memastikan pengarang dan penerbit tidak kosong
 document.addEventListener('DOMContentLoaded', function() {
-    const validateForm = (form) => {
+    // Validasi untuk form tambah buku
+    const formTambah = document.querySelector('#modalTambahBuku form');
+    if (formTambah) {
+        formTambah.addEventListener('submit', function(e) {
+            const pengarang = this.querySelector('input[name="pengarang"]').value.trim();
+            const penerbit = this.querySelector('input[name="penerbitBuku"]').value.trim();
+            
+            if (pengarang === '') {
+                e.preventDefault();
+                alert('Nama pengarang wajib diisi!');
+                this.querySelector('input[name="pengarang"]').focus();
+                return false;
+            }
+            
+            if (penerbit === '') {
+                e.preventDefault();
+                alert('Nama penerbit wajib diisi!');
+                this.querySelector('input[name="penerbitBuku"]').focus();
+                return false;
+            }
+        });
+    }
+    
+    // Validasi untuk semua form edit buku
+    const formsEdit = document.querySelectorAll('form[action*="act=edit"]');
+    formsEdit.forEach(function(form) {
         form.addEventListener('submit', function(e) {
             const pengarang = this.querySelector('input[name="pengarang"]').value.trim();
             const penerbit = this.querySelector('input[name="penerbitBuku"]').value.trim();
@@ -639,61 +818,66 @@ document.addEventListener('DOMContentLoaded', function() {
                 return false;
             }
         });
-    };
-    
-    // Validate add form
-    const formTambah = document.querySelector('#modalTambahBuku form');
-    if (formTambah) validateForm(formTambah);
-    
-    // Validate all edit forms
-    const formsEdit = document.querySelectorAll('form[action*="act=edit"]');
-    formsEdit.forEach(validateForm);
+    });
 });
 </script>
 
-<!-- jQuery and Scripts -->
+<!-- jQuery 3 -->
 <script src="../../assets/bower_components/jquery/dist/jquery.min.js"></script>
 <script src="../../assets/dist/js/sweetalert.min.js"></script>
 
-<!-- Success Message -->
+<!-- Pesan Berhasil Edit -->
 <script>
     <?php
     if (isset($_SESSION['berhasil']) && $_SESSION['berhasil'] <> '') {
-        echo "swal({ icon: 'success', title: 'Berhasil', text: '$_SESSION[berhasil]' })";
+        echo "swal({
+            icon: 'success',
+            title: 'Berhasil',
+            text: '$_SESSION[berhasil]'
+        })";
     }
     $_SESSION['berhasil'] = '';
     ?>
 </script>
 
-<!-- Error Message -->
+<!-- Notif Gagal -->
 <script>
     <?php
     if (isset($_SESSION['gagal']) && $_SESSION['gagal'] <> '') {
-        echo "swal({ icon: 'error', title: 'Gagal', text: '$_SESSION[gagal]' })";
+        echo "swal({
+                icon: 'error',
+                title: 'Gagal',
+                text: '$_SESSION[gagal]'
+              })";
     }
     $_SESSION['gagal'] = '';
     ?>
 </script>
 
-<!-- Delete Confirmation -->
+<!-- Swal Hapus Data -->
 <script>
     $('.btn-del').on('click', function(e) {
         e.preventDefault();
         const href = $(this).attr('href')
 
         swal({
-            icon: 'warning',
-            title: 'Peringatan',
-            text: 'Apakah anda yakin ingin menghapus data buku ini ?',
-            buttons: ['Tidak, Batalkan !', 'Iya, Hapus'],
-            dangerMode: true
-        })
-        .then((willDelete) => {
-            if (willDelete) {
-                document.location.href = href;
-            } else {
-                swal({ icon: 'error', title: 'Dibatalkan', text: 'Data buku tersebut aman !' })
-            }
-        });
+                icon: 'warning',
+                title: 'Peringatan',
+                text: 'Apakah anda yakin ingin menghapus data buku ini ?',
+                buttons: true,
+                dangerMode: true,
+                buttons: ['Tidak, Batalkan !', 'Iya, Hapus']
+            })
+            .then((willDelete) => {
+                if (willDelete) {
+                    document.location.href = href;
+                } else {
+                    swal({
+                        icon: 'error',
+                        title: 'Dibatalkan',
+                        text: 'Data buku tersebut aman !'
+                    })
+                }
+            });
     })
 </script>

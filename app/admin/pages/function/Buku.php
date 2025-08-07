@@ -42,9 +42,9 @@ function uploadFotoSampul($file, $id_buku) {
     }
 }
 
-// Function untuk hapus foto sampul lama
+// Function untuk hapus foto sampul lama - UPDATED: Hapus check untuk default cover
 function hapusFotoSampul($namaFile) {
-    if ($namaFile && $namaFile !== 'default-cover.jpeg') {
+    if ($namaFile && !empty($namaFile)) {
         $filePath = "../../assets/img/covers/" . $namaFile;
         if (file_exists($filePath)) {
             unlink($filePath);
@@ -194,17 +194,17 @@ if ($_GET['act'] == "tambah") {
     mysqli_autocommit($koneksi, FALSE);
 
     try {
-        // Insert buku dengan klasifikasi
+        // UPDATED: Insert buku dengan foto_sampul NULL sebagai default
         $sql = "INSERT INTO buku(judul_buku,kategori_buku,klasifikasi_buku,penerbit_buku,pengarang,tahun_terbit,isbn,j_buku_baik,j_buku_rusak,foto_sampul)
-            VALUES('" . $judul_buku . "','" . $kategori_buku . "','" . $klasifikasi_buku . "','" . $penerbit_buku . "','" . $pengarang . "','" . $tahun_terbit . "','" . $isbn . "', '" . $j_buku_baik . "', '" . $j_buku_rusak . "', 'default-cover.jpg')";
+            VALUES('" . $judul_buku . "','" . $kategori_buku . "','" . $klasifikasi_buku . "','" . $penerbit_buku . "','" . $pengarang . "','" . $tahun_terbit . "','" . $isbn . "', '" . $j_buku_baik . "', '" . $j_buku_rusak . "', NULL)";
         if (!mysqli_query($koneksi, $sql)) {
             throw new Exception("Gagal menambahkan data buku");
         }
 
         $id_buku = mysqli_insert_id($koneksi);
 
-        // Handle foto sampul upload
-        $foto_sampul = 'default-cover.jpg';
+        // UPDATED: Handle foto sampul upload - default ke NULL
+        $foto_sampul = NULL;
         if (isset($_FILES['fotoSampul']) && $_FILES['fotoSampul']['error'] == 0) {
             try {
                 $foto_sampul = uploadFotoSampul($_FILES['fotoSampul'], $id_buku);
@@ -215,8 +215,7 @@ if ($_GET['act'] == "tambah") {
                     throw new Exception("Gagal menyimpan nama file foto sampul");
                 }
             } catch (Exception $e) {
-                // Jika upload gagal, tetap lanjutkan dengan default cover
-                // Log error atau tampilkan peringatan jika diperlukan
+                // Jika upload gagal, tetap lanjutkan dengan NULL
             }
         }
 
@@ -287,13 +286,12 @@ if ($_GET['act'] == "tambah") {
                 // Upload new photo
                 $new_foto = uploadFotoSampul($_FILES['fotoSampul'], $id_buku);
                 
-                // Delete old photo if not default
+                // Delete old photo if exists
                 hapusFotoSampul($current_foto);
                 
                 $foto_sampul = $new_foto;
             } catch (Exception $e) {
                 // If upload fails, keep current photo
-                // You might want to log this error
             }
         }
 
@@ -426,7 +424,7 @@ if ($_GET['act'] == "tambah") {
             throw new Exception("Gagal menghapus data buku");
         }
 
-        // Hapus foto sampul jika bukan default
+        // Hapus foto sampul jika ada
         if ($foto_data && $foto_data['foto_sampul']) {
             hapusFotoSampul($foto_data['foto_sampul']);
         }
