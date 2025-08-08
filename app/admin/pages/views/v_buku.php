@@ -1,4 +1,4 @@
-i<!-- Content Wrapper. Contains page content -->
+<!-- Content Wrapper. Contains page content -->
 <div class="content-wrapper">
     <!-- Content Header (Page header) -->
     <section class="content-header">
@@ -153,7 +153,7 @@ i<!-- Content Wrapper. Contains page content -->
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                            <?php endif; ?>
+                                                        <?php endif; ?>
                                                         
                                                         <!-- Upload Foto Sampul Baru -->
                                                         <div class="form-group">
@@ -206,8 +206,15 @@ i<!-- Content Wrapper. Contains page content -->
                                                         </div>
                                                         
                                                         <div class="form-group">
-                                                            <label>ISBN <small style="color: red;">* Wajib diisi</small></label>
-                                                            <input type="text" class="form-control" value="<?= $row['isbn']; ?>" name="iSbn" required>
+                                                            <label>ISBN <small style="color: #999;">(Opsional)</small></label>
+                                                            <input type="text" 
+                                                                class="form-control" 
+                                                                value="<?= htmlspecialchars($row['isbn']); ?>" 
+                                                                name="iSbn" 
+                                                                pattern="^$|^(978|979)-\d{1,5}-\d{1,7}-\d{1,7}-\d{1}$"
+                                                                title="Format: 978-xxx-xxx-xxx-x atau 979-xxx-xxx-xxx-x, atau kosongkan"
+                                                                placeholder="Contoh: 978-623-266-977-9 atau kosongkan jika tidak ada">
+                                                            <small class="text-muted">Masukkan nomor ISBN dengan tanda hubung atau kosongkan jika tidak tersedia</small>
                                                         </div>
                                                         
                                                         <div class="form-group">
@@ -232,14 +239,12 @@ i<!-- Content Wrapper. Contains page content -->
                             </tbody>
                         </table>
                     </div>
-                    </div>
-                    <!-- /.box-body -->
                 </div>
-                <!-- /.box -->
+                <!-- /.box-body -->
             </div>
-            <!-- /.col -->
+            <!-- /.box -->
         </div>
-        <!-- /.row -->
+        <!-- /.col -->
     </section>
     <!-- /.content -->
 </div>
@@ -310,9 +315,14 @@ i<!-- Content Wrapper. Contains page content -->
                     </div>
                     
                     <div class="form-group">
-                        <label>ISBN <small style="color: red;">* Wajib diisi</small></label>
-                        <input type="text" class="form-control" placeholder="Contoh: 978-602-8519-93-9" name="iSbn" required>
-                        <small class="text-muted">Masukkan nomor ISBN lengkap dengan tanda hubung</small>
+                        <label>ISBN <small style="color: #999;">(Opsional)</small></label>
+                        <input type="text" 
+                            class="form-control" 
+                            placeholder="Contoh: 978-623-266-977-9 atau kosongkan jika tidak ada" 
+                            name="iSbn" 
+                            pattern="^$|^(978|979)-\d{1,5}-\d{1,7}-\d{1,7}-\d{1}$"
+                            title="Format: 978-xxx-xxx-xxx-x atau 979-xxx-xxx-xxx-x, atau kosongkan">
+                        <small class="text-muted">Masukkan nomor ISBN dengan tanda hubung atau kosongkan jika tidak tersedia</small>
                     </div>
                     
                     <div class="form-group">
@@ -772,8 +782,74 @@ function regenerateUnitsForBook(id_buku) {
     });
 }
 
-// Form validation untuk memastikan pengarang dan penerbit tidak kosong
+function formatISBNSimple(input) {
+    let value = input.value.replace(/[^\d]/g, ''); // Ambil cuma angka doang
+    
+    // Kalo kosong, biarkan kosong
+    if (value === '') {
+        input.value = '';
+        return;
+    }
+    
+    // Auto format dengan tanda hubung kalo cukup digit
+    if (value.length >= 3) {
+        if (value.startsWith('978') || value.startsWith('979')) {
+            // Format ISBN-13: 978-x-xxxx-xxxx-x
+            let formatted = value.substring(0, 3);
+            if (value.length > 3) formatted += '-' + value.substring(3, 4);
+            if (value.length > 4) formatted += '-' + value.substring(4, 8);
+            if (value.length > 8) formatted += '-' + value.substring(8, 12);
+            if (value.length > 12) formatted += '-' + value.substring(12, 13);
+            
+            input.value = formatted;
+        } else {
+            // Format ISBN-10 atau format bebas: xxx-xxx-xxx-x
+            let formatted = value;
+            if (value.length > 3) {
+                formatted = value.substring(0, 3) + '-' + value.substring(3);
+            }
+            if (value.length > 6) {
+                formatted = value.substring(0, 3) + '-' + value.substring(3, 6) + '-' + value.substring(6);
+            }
+            if (value.length > 9) {
+                formatted = value.substring(0, 3) + '-' + value.substring(3, 6) + '-' + value.substring(6, 9) + '-' + value.substring(9);
+            }
+            
+            input.value = formatted;
+        }
+    } else {
+        input.value = value;
+    }
+}
+
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Setup auto-format untuk semua input ISBN
+    const isbnInputs = document.querySelectorAll('input[name="iSbn"]');
+    isbnInputs.forEach(function(input) {
+        // Hapus attribute validation yang bikin ribet
+        input.removeAttribute('pattern');
+        input.removeAttribute('title');
+        input.placeholder = "Contoh: 9780123456789 atau kosongkan";
+        
+        // Cuma auto-format aja, gak ada validasi
+        input.addEventListener('input', function() {
+            formatISBNSimple(this);
+        });
+        
+        // Kalo user paste dengan tanda hubung, biarkan aja
+        input.addEventListener('paste', function(e) {
+            setTimeout(() => {
+                // Kalo udah ada tanda hubung, jangan diotak-atik
+                if (this.value.includes('-')) {
+                    return;
+                } else {
+                    formatISBNSimple(this);
+                }
+            }, 10);
+        });
+    });
+    
     // Validasi untuk form tambah buku
     const formTambah = document.querySelector('#modalTambahBuku form');
     if (formTambah) {
