@@ -37,7 +37,7 @@
                     <!-- Search Form -->
                     <div class="box-body">
                         <div class="row">
-                            <div class="col-md-8">
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     <label>Cari Peminjaman</label>
                                     <div class="input-group">
@@ -53,7 +53,15 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>&nbsp;</label>
+                                    <button type="button" class="btn btn-primary btn-block" onclick="scanBukuReturn()">
+                                        <i class="fa fa-qrcode"></i> Scan Barcode Buku
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label>&nbsp;</label>
                                     <button type="button" class="btn btn-warning btn-block" onclick="resetPencarian()">
@@ -128,6 +136,41 @@
     </div>
 </div>
 
+<!-- Modal Scan Buku untuk Pengembalian -->
+<div class="modal fade" id="modalScanBukuReturn">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title"><i class="fa fa-qrcode"></i> Scan Barcode Buku Unit</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div id="reader-buku-return" style="width: 100%; height: 300px; border: 2px dashed #ccc;"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="alert alert-info">
+                            <h5><i class="fa fa-info-circle"></i> Petunjuk:</h5>
+                            <p>1. Posisikan barcode unit buku di depan kamera</p>
+                            <p>2. Sistem akan mencari peminjaman aktif untuk buku tersebut</p>
+                            <p>3. Tunggu hingga barcode terbaca otomatis</p>
+                            <p><strong>Format barcode:</strong> BK00001-001, ISBN, atau format lainnya</p>
+                        </div>
+                        
+                        <div id="scanStatusBukuReturn" class="alert" style="display: none;">
+                            <span id="scanMessageBukuReturn"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal Konfirmasi Pengembalian -->
 <div class="modal fade" id="modalKonfirmasiKembali">
     <div class="modal-dialog">
@@ -146,6 +189,7 @@
                         <p><strong>Buku:</strong> <span id="detailJudulBuku"></span></p>
                         <p><strong>Tanggal Pinjam:</strong> <span id="detailTanggalPinjam"></span></p>
                         <p><strong>Tanggal Kembali:</strong> <span id="detailTanggalKembali"></span></p>
+                        <p><strong>Barcode Unit:</strong> <span id="detailBarcodeBuku" class="label label-primary"></span></p>
                     </div>
                     
                     <div class="form-group">
@@ -220,11 +264,51 @@
 
 <script>
 let html5QrCodePeminjaman;
+let html5QrCodeBukuReturn;
 let allPeminjaman = [];
+
+// Enhanced notification system
+function showNotification(type, title, message, options = {}) {
+    const config = {
+        title: title,
+        text: message,
+        timer: options.timer || 3000,
+        showConfirmButton: options.showConfirmButton !== false,
+        ...options
+    };
+
+    switch(type) {
+        case 'success':
+            config.icon = 'success';
+            break;
+        case 'error':
+            config.icon = 'error';
+            break;
+        case 'warning':
+            config.icon = 'warning';
+            break;
+        case 'info':
+            config.icon = 'info';
+            break;
+        case 'scan_success':
+            config.icon = 'success';
+            config.timer = 2000;
+            break;
+        case 'scan_error':
+            config.icon = 'error';
+            config.timer = 3000;
+            break;
+        default:
+            config.icon = 'info';
+    }
+
+    swal(config);
+}
 
 // Load data peminjaman saat halaman dimuat
 $(document).ready(function() {
     loadPeminjaman();
+    showNotification('info', 'Sistem Siap', 'Form pengembalian buku siap digunakan. Scan barcode anggota/buku atau cari manual.', { timer: 3000 });
 });
 
 // Load semua data peminjaman
@@ -261,7 +345,9 @@ function displayPeminjaman(data, filter = '') {
                 item.nama_anggota.toLowerCase().includes(searchTerm) ||
                 item.judul_buku.toLowerCase().includes(searchTerm) ||
                 // Tambahkan pencarian berdasarkan kode anggota
-                (item.kode_anggota && item.kode_anggota.toLowerCase().includes(searchTerm))
+                (item.kode_anggota && item.kode_anggota.toLowerCase().includes(searchTerm)) ||
+                // Tambahkan pencarian berdasarkan barcode buku
+                (item.barcode_buku && item.barcode_buku.toLowerCase().includes(searchTerm))
             );
         });
     }
@@ -287,7 +373,7 @@ function displayPeminjaman(data, filter = '') {
                 <tr ${isLate ? 'class="danger"' : ''}>
                     <td>${index + 1}</td>
                     <td>${item.nama_anggota}</td>
-                    <td>${item.judul_buku}</td>
+                    <td>${item.judul_buku}${item.barcode_buku ? '<br><small class="text-muted">Unit: ' + item.barcode_buku + '</small>' : ''}</td>
                     <td>${formatDate(item.tanggal_peminjaman)}</td>
                     <td>${formatDate(item.tanggal_pengembalian)}</td>
                     <td><span class="label ${statusClass}">${statusText}</span></td>
@@ -336,9 +422,10 @@ function hitungDenda(tanggalKembali) {
     return 0;
 }
 
-// Scan barcode untuk pencarian peminjaman
+// Scan barcode untuk pencarian peminjaman berdasarkan anggota
 function scanPeminjamanBarcode() {
     $('#modalScanPeminjaman').modal('show');
+    showNotification('info', 'Memulai Scan', 'Menyiapkan kamera untuk scan barcode anggota...', { timer: 2000 });
     
     setTimeout(() => {
         html5QrCodePeminjaman = new Html5Qrcode("reader-peminjaman");
@@ -355,6 +442,7 @@ function scanPeminjamanBarcode() {
                     },
                     (decodedText, decodedResult) => {
                         showScanStatusPeminjaman('success', 'Barcode berhasil terbaca, mencari peminjaman...');
+                        showNotification('scan_success', 'Scan Berhasil', 'Barcode anggota berhasil terbaca, mencari peminjaman...');
                         
                         // Cari anggota berdasarkan kode yang discan
                         cariPeminjamanByKodeAnggota(decodedText);
@@ -369,12 +457,66 @@ function scanPeminjamanBarcode() {
                     }
                 ).catch(err => {
                     showScanStatusPeminjaman('error', 'Tidak dapat mengakses kamera: ' + err);
+                    showNotification('scan_error', 'Error Kamera', 'Tidak dapat mengakses kamera: ' + err);
                 });
             } else {
                 showScanStatusPeminjaman('error', 'Kamera tidak ditemukan');
+                showNotification('scan_error', 'Kamera Tidak Tersedia', 'Tidak ada kamera yang tersedia untuk scanning');
             }
         }).catch(err => {
             showScanStatusPeminjaman('error', 'Error mengakses kamera: ' + err);
+            showNotification('scan_error', 'Error Kamera', 'Gagal mengakses kamera: ' + err);
+        });
+    }, 500);
+}
+
+// NEW: Scan barcode buku untuk pengembalian langsung
+function scanBukuReturn() {
+    $('#modalScanBukuReturn').modal('show');
+    showNotification('info', 'Memulai Scan', 'Menyiapkan kamera untuk scan barcode buku unit...', { timer: 2000 });
+    
+    setTimeout(() => {
+        html5QrCodeBukuReturn = new Html5Qrcode("reader-buku-return");
+        
+        Html5Qrcode.getCameras().then(devices => {
+            if (devices && devices.length) {
+                const cameraId = devices[0].id;
+                
+                html5QrCodeBukuReturn.start(
+                    cameraId,
+                    {
+                        fps: 10,
+                        qrbox: { width: 250, height: 250 }
+                    },
+                    (decodedText, decodedResult) => {
+                        showScanStatusBukuReturn('success', 'Barcode berhasil terbaca, mencari peminjaman aktif...');
+                        showNotification('scan_success', 'Scan Berhasil', 'Barcode buku berhasil terbaca, mencari peminjaman aktif...');
+                        
+                        // Trim scanned barcode before processing
+                        let scannedCode = decodedText.trim();
+                        
+                        // Cari peminjaman berdasarkan barcode buku yang discan
+                        cariPeminjamanByBarcodeBuku(scannedCode);
+                        
+                        html5QrCodeBukuReturn.stop();
+                        setTimeout(() => {
+                            $('#modalScanBukuReturn').modal('hide');
+                        }, 1500);
+                    },
+                    (errorMessage) => {
+                        // Silent error, just keep scanning
+                    }
+                ).catch(err => {
+                    showScanStatusBukuReturn('error', 'Tidak dapat mengakses kamera: ' + err);
+                    showNotification('scan_error', 'Error Kamera', 'Tidak dapat mengakses kamera: ' + err);
+                });
+            } else {
+                showScanStatusBukuReturn('error', 'Kamera tidak ditemukan');
+                showNotification('scan_error', 'Kamera Tidak Tersedia', 'Tidak ada kamera yang tersedia untuk scanning');
+            }
+        }).catch(err => {
+            showScanStatusBukuReturn('error', 'Error mengakses kamera: ' + err);
+            showNotification('scan_error', 'Error Kamera', 'Gagal mengakses kamera: ' + err);
         });
     }, 500);
 }
@@ -383,6 +525,25 @@ function scanPeminjamanBarcode() {
 function showScanStatusPeminjaman(status, message) {
     const statusDiv = $('#scanStatusPeminjaman');
     const messageSpan = $('#scanMessagePeminjaman');
+    
+    statusDiv.removeClass('alert-success alert-danger alert-warning');
+    
+    if (status === 'success') {
+        statusDiv.addClass('alert-success');
+    } else if (status === 'error') {
+        statusDiv.addClass('alert-danger');
+    } else {
+        statusDiv.addClass('alert-warning');
+    }
+    
+    messageSpan.text(message);
+    statusDiv.show();
+}
+
+// Show scan status untuk buku return
+function showScanStatusBukuReturn(status, message) {
+    const statusDiv = $('#scanStatusBukuReturn');
+    const messageSpan = $('#scanMessageBukuReturn');
     
     statusDiv.removeClass('alert-success alert-danger alert-warning');
     
@@ -414,49 +575,96 @@ function cariPeminjamanByKodeAnggota(kodeAnggota) {
                 $('#searchPeminjaman').val(namaAnggota);
                 displayPeminjaman(allPeminjaman, namaAnggota);
                 
-                swal({
-                    icon: 'success',
-                    title: 'Berhasil',
-                    text: `Menampilkan peminjaman untuk: ${namaAnggota}`,
-                    timer: 2000
-                });
+                showNotification('success', 'Anggota Ditemukan', `Menampilkan peminjaman untuk: ${namaAnggota}`);
             } else {
-                swal({
-                    icon: 'error',
-                    title: 'Anggota Tidak Ditemukan',
-                    text: response.message
-                });
+                showNotification('error', 'Anggota Tidak Ditemukan', response.message);
             }
         },
         error: function() {
-            swal({
-                icon: 'error',
-                title: 'Error',
-                text: 'Terjadi kesalahan saat mencari anggota'
-            });
+            showNotification('error', 'Error Koneksi', 'Terjadi kesalahan saat mencari anggota');
         }
     });
+}
+
+// NEW: Cari peminjaman berdasarkan barcode buku
+function cariPeminjamanByBarcodeBuku(barcodeBuku) {
+    // Cari di data peminjaman yang sudah dimuat
+    const peminjaman = allPeminjaman.find(item => {
+        return item.kondisi_buku_saat_dikembalikan === '' && 
+               (item.barcode_buku === barcodeBuku || 
+                // Fallback: cari berdasarkan kecocokan judul buku jika barcode_buku kosong
+                (!item.barcode_buku && item.judul_buku));
+    });
+    
+    if (peminjaman) {
+        // Filter dan tampilkan hanya peminjaman yang cocok
+        $('#searchPeminjaman').val(barcodeBuku);
+        displayPeminjaman(allPeminjaman, barcodeBuku);
+        
+        // Langsung buka modal konfirmasi jika hanya ada 1 hasil
+        const activeLoans = allPeminjaman.filter(item => 
+            item.kondisi_buku_saat_dikembalikan === '' && 
+            (item.barcode_buku === barcodeBuku || 
+             item.judul_buku.toLowerCase().includes(barcodeBuku.toLowerCase()))
+        );
+        
+        if (activeLoans.length === 1) {
+            setTimeout(() => {
+                konfirmasiPengembalian(activeLoans[0].id_peminjaman);
+                showNotification('success', 'Buku Ditemukan', `Membuka form pengembalian untuk "${activeLoans[0].judul_buku}" - ${activeLoans[0].nama_anggota}`);
+            }, 1000);
+        } else {
+            showNotification('success', 'Buku Ditemukan', `Ditemukan ${activeLoans.length} peminjaman aktif untuk barcode tersebut`);
+        }
+    } else {
+        // Jika tidak ditemukan di data lokal, coba cari di server
+        $.ajax({
+            url: 'pages/function/Peminjaman.php',
+            type: 'POST',
+            data: {
+                aksi: 'cari_peminjaman_by_barcode',
+                barcode_buku: barcodeBuku
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success' && response.data.length > 0) {
+                    // Reload data peminjaman dan filter berdasarkan hasil
+                    loadPeminjaman();
+                    setTimeout(() => {
+                        displayPeminjaman(allPeminjaman, barcodeBuku);
+                        if (response.data.length === 1) {
+                            konfirmasiPengembalian(response.data[0].id_peminjaman);
+                        }
+                        showNotification('success', 'Buku Ditemukan', `Ditemukan ${response.data.length} peminjaman aktif untuk barcode tersebut`);
+                    }, 500);
+                } else {
+                    showNotification('error', 'Buku Tidak Ditemukan', 'Tidak ada peminjaman aktif untuk barcode buku tersebut');
+                }
+            },
+            error: function() {
+                showNotification('error', 'Error Koneksi', 'Terjadi kesalahan saat mencari peminjaman berdasarkan barcode buku');
+            }
+        });
+    }
 }
 
 // Cari peminjaman manual
 function cariPeminjaman() {
     const keyword = $('#searchPeminjaman').val().trim();
     if (keyword === '') {
-        swal({
-            icon: 'warning',
-            title: 'Peringatan',
-            text: 'Mohon masukkan kata kunci pencarian'
-        });
+        showNotification('warning', 'Input Kosong', 'Mohon masukkan kata kunci pencarian');
         return;
     }
     
     displayPeminjaman(allPeminjaman, keyword);
+    showNotification('info', 'Pencarian Selesai', `Menampilkan hasil pencarian untuk: "${keyword}"`, { timer: 2000 });
 }
 
 // Reset pencarian
 function resetPencarian() {
     $('#searchPeminjaman').val('');
     displayPeminjaman(allPeminjaman);
+    showNotification('success', 'Pencarian Direset', 'Menampilkan semua peminjaman aktif', { timer: 2000 });
 }
 
 // Konfirmasi pengembalian
@@ -464,11 +672,7 @@ function konfirmasiPengembalian(idPeminjaman) {
     const peminjaman = allPeminjaman.find(item => item.id_peminjaman == idPeminjaman);
     
     if (!peminjaman) {
-        swal({
-            icon: 'error',
-            title: 'Error',
-            text: 'Data peminjaman tidak ditemukan'
-        });
+        showNotification('error', 'Error', 'Data peminjaman tidak ditemukan');
         return;
     }
     
@@ -478,6 +682,13 @@ function konfirmasiPengembalian(idPeminjaman) {
     $('#detailJudulBuku').text(peminjaman.judul_buku);
     $('#detailTanggalPinjam').text(formatDate(peminjaman.tanggal_peminjaman));
     $('#detailTanggalKembali').text(formatDate(peminjaman.tanggal_pengembalian));
+    
+    // Tampilkan barcode buku jika ada
+    if (peminjaman.barcode_buku) {
+        $('#detailBarcodeBuku').text(peminjaman.barcode_buku).show();
+    } else {
+        $('#detailBarcodeBuku').text('Tidak tersedia').show();
+    }
     
     // Hitung dan set denda
     const denda = hitungDenda(peminjaman.tanggal_pengembalian);
@@ -491,11 +702,7 @@ function perpanjangPeminjaman(idPeminjaman) {
     const peminjaman = allPeminjaman.find(item => item.id_peminjaman == idPeminjaman);
     
     if (!peminjaman) {
-        swal({
-            icon: 'error',
-            title: 'Error',
-            text: 'Data peminjaman tidak ditemukan'
-        });
+        showNotification('error', 'Error', 'Data peminjaman tidak ditemukan');
         return;
     }
     
@@ -534,16 +741,27 @@ function formatDateForInput(date) {
     return `${year}-${month}-${day}`;
 }
 
-// Stop camera when modal is closed
+// Stop cameras when modals are closed
 $('#modalScanPeminjaman').on('hidden.bs.modal', function () {
     if (html5QrCodePeminjaman) {
         html5QrCodePeminjaman.stop().then(() => {
             html5QrCodePeminjaman.clear();
         }).catch(err => {
-            console.error(err);
+            console.error('Error stopping anggota camera:', err);
         });
     }
     $('#scanStatusPeminjaman').hide();
+});
+
+$('#modalScanBukuReturn').on('hidden.bs.modal', function () {
+    if (html5QrCodeBukuReturn) {
+        html5QrCodeBukuReturn.stop().then(() => {
+            html5QrCodeBukuReturn.clear();
+        }).catch(err => {
+            console.error('Error stopping buku return camera:', err);
+        });
+    }
+    $('#scanStatusBukuReturn').hide();
 });
 
 // Event listeners
@@ -553,7 +771,7 @@ $('#searchPeminjaman').on('keypress', function(e) {
     }
 });
 
-// Form submissions - FIXED WITH AJAX
+// Form submissions with enhanced notifications
 $('#formPengembalian').on('submit', function(e) {
     e.preventDefault();
     
@@ -574,6 +792,12 @@ $('#formPengembalian').on('submit', function(e) {
         }
     }).then((willReturn) => {
         if (willReturn) {
+            // Show processing notification
+            showNotification('info', 'Memproses...', 'Sedang memproses pengembalian buku...', { 
+                timer: 0, 
+                showConfirmButton: false 
+            });
+            
             // Submit form via AJAX
             const formData = new FormData(this);
             
@@ -586,28 +810,21 @@ $('#formPengembalian').on('submit', function(e) {
                 dataType: 'json',
                 success: function(response) {
                     if (response.status === 'success') {
-                        swal({
-                            icon: 'success',
-                            title: 'Berhasil',
-                            text: response.message
-                        }).then(() => {
-                            $('#modalKonfirmasiKembali').modal('hide');
-                            loadPeminjaman($('#searchPeminjaman').val());
-                        });
+                        showNotification('success', 'Pengembalian Berhasil!', 
+                            `Buku "${response.data.judul_buku}" dari ${response.data.nama_anggota} berhasil dikembalikan.`);
+                        
+                        $('#modalKonfirmasiKembali').modal('hide');
+                        loadPeminjaman($('#searchPeminjaman').val());
                     } else {
-                        swal({
-                            icon: 'error',
-                            title: 'Gagal',
-                            text: response.message
-                        });
+                        showNotification('error', 'Pengembalian Gagal', response.message);
                     }
                 },
-                error: function() {
-                    swal({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Terjadi kesalahan saat memproses pengembalian'
-                    });
+                error: function(xhr, status, error) {
+                    let errorMessage = 'Terjadi kesalahan saat memproses pengembalian';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    showNotification('error', 'Error Server', errorMessage);
                 }
             });
         }
@@ -634,6 +851,12 @@ $('#formPerpanjangan').on('submit', function(e) {
         }
     }).then((willExtend) => {
         if (willExtend) {
+            // Show processing notification
+            showNotification('info', 'Memproses...', 'Sedang memproses perpanjangan peminjaman...', { 
+                timer: 0, 
+                showConfirmButton: false 
+            });
+            
             // Submit form via AJAX
             const formData = new FormData(this);
             
@@ -646,28 +869,21 @@ $('#formPerpanjangan').on('submit', function(e) {
                 dataType: 'json',
                 success: function(response) {
                     if (response.status === 'success') {
-                        swal({
-                            icon: 'success',
-                            title: 'Berhasil',
-                            text: response.message
-                        }).then(() => {
-                            $('#modalPerpanjangan').modal('hide');
-                            loadPeminjaman($('#searchPeminjaman').val());
-                        });
+                        showNotification('success', 'Perpanjangan Berhasil!', 
+                            'Peminjaman berhasil diperpanjang. Tanggal kembali telah diupdate.');
+                        
+                        $('#modalPerpanjangan').modal('hide');
+                        loadPeminjaman($('#searchPeminjaman').val());
                     } else {
-                        swal({
-                            icon: 'error',
-                            title: 'Gagal',
-                            text: response.message
-                        });
+                        showNotification('error', 'Perpanjangan Gagal', response.message);
                     }
                 },
-                error: function() {
-                    swal({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Terjadi kesalahan saat memproses perpanjangan'
-                    });
+                error: function(xhr, status, error) {
+                    let errorMessage = 'Terjadi kesalahan saat memproses perpanjangan';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    showNotification('error', 'Error Server', errorMessage);
                 }
             });
         }
@@ -697,22 +913,37 @@ function checkDueSoon() {
             `• ${book.nama_anggota} - ${book.judul_buku} (${formatDate(book.tanggal_pengembalian)})`
         ).join('\n');
         
-        swal({
-            icon: 'warning',
-            title: 'Peringatan Jatuh Tempo',
-            text: `${dueSoonBooks.length} buku akan jatuh tempo dalam waktu dekat\n\n${booksList}`,
-            buttons: {
-                ok: {
-                    text: 'OK',
-                    className: 'btn btn-warning'
-                }
-            }
-        });
+        showNotification('warning', 'Peringatan Jatuh Tempo', 
+            `${dueSoonBooks.length} buku akan jatuh tempo dalam waktu dekat:\n\n${booksList}`, {
+                timer: 8000,
+                showConfirmButton: true
+            });
     }
 }
 
 // Check due soon books when page loads
 $(document).ready(function() {
-    setTimeout(checkDueSoon, 2000);
+    setTimeout(checkDueSoon, 3000);
+});
+
+// Keyboard shortcuts
+$(document).keydown(function(e) {
+    // Alt + S untuk scan anggota
+    if (e.altKey && e.keyCode === 83) {
+        e.preventDefault();
+        scanPeminjamanBarcode();
+    }
+    
+    // Alt + B untuk scan buku
+    if (e.altKey && e.keyCode === 66) {
+        e.preventDefault();
+        scanBukuReturn();
+    }
+    
+    // Alt + R untuk reset
+    if (e.altKey && e.keyCode === 82) {
+        e.preventDefault();
+        resetPencarian();
+    }
 });
 </script>
