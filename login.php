@@ -65,9 +65,14 @@ session_start();
 
             <div class="social-auth-links text-center">
                 <p style="font-size: 11px;">- ATAU -</p>
-                <div class="row">
+                <div class="row" style="margin-top: 10px;">
                     <div class="col-xs-12">
-                        <button type="button" onclick="Register()" class="btn btn-block btn-warning btn-flat"><i class="fa fa-user-plus"></i> Daftar sebagai member</button>
+                        <a href="pendaftaran" class="btn btn-block btn-warning btn-flat"><i class="fa fa-user-plus"></i> Daftar sebagai member</a>
+                    </div>
+                </div>
+                <div class="row" style="margin-top: 10px;">
+                    <div class="col-xs-12">
+                        <a href="lupa-password-admin" class="btn btn-block btn-danger btn-flat"><i class="fa fa-key"></i> Lupa Password Admin</a>
                     </div>
                 </div>
             </div>
@@ -88,7 +93,7 @@ session_start();
     <!-- Fungsi mengarahkan kehalaman pendaftaran -->
     <script>
         function Register() {
-            window.location.href = "pendaftaran";
+            window.location.href = "register";
         }
     </script>
     <!-- Fungsi mengarahkan kehalaman lupa password -->

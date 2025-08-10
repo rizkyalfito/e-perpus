@@ -1,17 +1,29 @@
 <IfModule mod_rewrite.c>
 RewriteEngine on
 
+# Login & Registration Pages
 RewriteRule ^masuk$ login.php [L]
 RewriteRule ^pendaftaran$ register.php [L]
-RewriteRule ^lupa-password$ forgot_password.php [L]
+RewriteRule ^lupa-password$ lupa_password.php [L]
 RewriteRule ^lupa-sandi-web$ password-web.php [L]
+RewriteRule ^lupa-password-admin$ lupa_password_email.php [L]
+RewriteRule ^lupa_password_email$ lupa_password_email.php [L]
+
+# Reset Password Pages
+RewriteRule ^reset-password$ reset_password_form.php [L]
+RewriteRule ^reset_password_form$ reset_password_form.php [L]
 
 #User
 RewriteRule ^user$ app/user [L]
 
-#Admin
+#Admin  
 RewriteRule ^admin$ app/admin [L]
 
 #Pemindai QR
 RewriteRule ^pindai-qr$ app/scanner [L]
+
+# Handle 404 errors - redirect ke halaman login jika URL tidak ditemukan
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ masuk?error=404 [L,QSA]
 </IfModule>
