@@ -107,6 +107,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         exit;
     }
+    
+    // New action: cari peminjaman by barcode buku
+    if (isset($_POST['aksi']) && $_POST['aksi'] === 'cari_peminjaman_by_barcode') {
+        $barcode_buku = mysqli_real_escape_string($koneksi, $_POST['barcode_buku']);
+        
+        // Query peminjaman yang aktif (belum dikembalikan) dengan barcode buku yang sesuai
+        $query = mysqli_query($koneksi, "SELECT * FROM peminjaman WHERE barcode_buku = '$barcode_buku' AND kondisi_buku_saat_dikembalikan = ''");
+        
+        $data = [];
+        while ($row = mysqli_fetch_assoc($query)) {
+            $data[] = $row;
+        }
+        
+        if (count($data) > 0) {
+            echo json_encode([
+                'status' => 'success',
+                'data' => $data,
+                'message' => 'Peminjaman aktif ditemukan untuk barcode buku tersebut',
+                'notification_type' => 'scan_success'
+            ]);
+        } else {
+            echo json_encode([
+                'status' => 'error',
+                'data' => [],
+                'message' => 'Tidak ditemukan peminjaman aktif untuk barcode buku tersebut',
+                'notification_type' => 'scan_error'
+            ]);
+        }
+        exit;
+    }
 }
 
 // Handle form submissions
