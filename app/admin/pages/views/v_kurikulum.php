@@ -142,6 +142,14 @@
                                                 <div class="box-header with-border">
                                                     <h3 class="box-title">Daftar Buku (<?= $row['nama_kurikulum']; ?>)</h3>
                                                     <div class="box-tools pull-right">
+                                                        <div class="btn-group">
+                                                            <button type="button" class="btn btn-success btn-sm" onclick="previewExcel(<?= $row['id_kurikulum']; ?>)">
+                                                                <i class="fa fa-eye"></i> Preview Excel
+                                                            </button>
+                                                            <button type="button" class="btn btn-primary btn-sm" onclick="downloadExcel(<?= $row['id_kurikulum']; ?>)">
+                                                                <i class="fa fa-download"></i> Download Excel
+                                                            </button>
+                                                        </div>
                                                         <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i></button>
                                                     </div>
                                                 </div>
@@ -152,19 +160,27 @@
                                                                 <th>No</th>
                                                                 <th>Judul Buku</th>
                                                                 <th>Pengarang</th>
+                                                                <th>Penerbit</th>
+                                                                <th>Tahun Terbit</th>
+                                                                <th>ISBN</th>
+                                                                <th>Kategori</th>
                                                                 <th>Aksi</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
                                                             <?php
                                                             $no_buku = 1;
-                                                            $query_buku = mysqli_query($koneksi, "SELECT bk.*, b.judul_buku, b.pengarang FROM buku_kurikulum bk JOIN buku b ON bk.id_buku = b.id_buku WHERE bk.id_kurikulum = " . $row['id_kurikulum']);
+                                                            $query_buku = mysqli_query($koneksi, "SELECT bk.*, b.judul_buku, b.pengarang, b.penerbit_buku, b.tahun_terbit, b.isbn, b.kategori_buku FROM buku_kurikulum bk JOIN buku b ON bk.id_buku = b.id_buku WHERE bk.id_kurikulum = " . $row['id_kurikulum']);
                                                             while ($row_buku = mysqli_fetch_assoc($query_buku)) {
                                                             ?>
                                                                 <tr>
                                                                     <td><?= $no_buku++; ?></td>
                                                                     <td><?= $row_buku['judul_buku']; ?></td>
                                                                     <td><?= $row_buku['pengarang']; ?></td>
+                                                                    <td><?= $row_buku['penerbit_buku']; ?></td>
+                                                                    <td><?= $row_buku['tahun_terbit']; ?></td>
+                                                                    <td><?= $row_buku['isbn']; ?></td>
+                                                                    <td><?= $row_buku['kategori_buku']; ?></td>
                                                                     <td>
                                                                         <a href="pages/function/Kurikulum.php?act=hapus_buku&id=<?= $row_buku['id_buku_kurikulum']; ?>" class="btn btn-danger btn-xs btn-del-buku"><i class="fa fa-trash"></i> Hapus</a>
                                                                     </td>
@@ -303,6 +319,14 @@
                     }
                 });
         })
+    }
+
+    function previewExcel(id_kurikulum) {
+        window.open('pages/function/export_buku_kurikulum.php?id_kurikulum=' + id_kurikulum + '&action=preview', '_blank');
+    }
+
+    function downloadExcel(id_kurikulum) {
+        window.open('pages/function/export_buku_kurikulum.php?id_kurikulum=' + id_kurikulum + '&action=download', '_blank');
     }
 
     $(document).ready(function() {
