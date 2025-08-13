@@ -4,8 +4,8 @@
 // Konfigurasi SMTP Email - GANTI DENGAN DATA ANDA
 define('SMTP_HOST', 'smtp.gmail.com');
 define('SMTP_PORT', 587);
-define('SMTP_USERNAME', 'wulandariulan199@gmail.com'); // GANTI dengan email Anda
-define('SMTP_PASSWORD', 'ljgy zume sosh llok');    // GANTI dengan App Password Gmail
+define('SMTP_USERNAME', 'ikycollege@gmail.com'); // GANTI dengan email Anda
+define('SMTP_PASSWORD', '');    // GANTI dengan App Password Gmail
 define('SMTP_ENCRYPTION', 'tls');
 
 // Pengirim Email
